@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: rehsozEvilDeedz
+      MYSQL_DATABASE: reknown_db
+      MYSQL_USER: rehsoz
+      MYSQL_PASSWORD: beanz
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  reknown-material:
+    build:
+      context: .
+    container_name: reknown-material
+    environment:
+      DATABASE_URI: "mysql+pymysql://rehsoz:beanz@mariadb:3306/reknown_db"
+    depends_on:
+      - mariadb
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/reknown-material
+    command: ["/reknown-material/entrypoint.sh"]
+
