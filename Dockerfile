@@ -1,6 +1,6 @@
 FROM python:3
 
-WORKDIR /reknown-material
+WORKDIR /safana-bekam-api
 
 COPY requirements.txt requirements.txt 
 RUN pip3 install -r requirements.txt

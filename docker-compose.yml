@@ -6,7 +6,7 @@ services:
     container_name: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: rehsozEvilDeedz
-      MYSQL_DATABASE: reknown_db
+      MYSQL_DATABASE: safana_db
       MYSQL_USER: rehsoz
       MYSQL_PASSWORD: beanz
     ports:
@@ -14,17 +14,17 @@ services:
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  reknown-material:
+  safana-bekam-api:
     build:
       context: .
-    container_name: reknown-material
+    container_name: safana-bekam-api
     environment:
-      DATABASE_URI: "mysql+pymysql://rehsoz:beanz@mariadb:3306/reknown_db"
+      DATABASE_URI: "mysql+pymysql://rehsoz:beanz@mariadb:3306/safana_db"
     depends_on:
       - mariadb
     ports:
       - "5000:5000"
     volumes:
-      - .:/reknown-material
-    command: ["/reknown-material/entrypoint.sh"]
+      - .:/safana-bekam-api
+    command: ["/safana-bekam-api/entrypoint.sh"]
 
