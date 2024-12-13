@@ -52,22 +52,35 @@ def register_routes(app, db, bcrypt):
             username = request.form.get('username')
             password = request.form.get('password')
 
-        # Query the user by username
-        user = User.query.filter(User.username == username).first()
+            # Query the user by username
+            user = User.query.filter(User.username == username).first()
 
-        if user is None:
-            # Return error if user does not exist
-            return jsonify({"status": "failed",}), 404
+            if user is None:
+                # Return error if user does not exist
+                return jsonify({"status": "failed", "message": "User not found"}), 404
 
-        # Check password
-        if bcrypt.check_password_hash(user.password, password):
-            # Log the user in
-            login_user(user)
-            # Return a success JSON response
-            return jsonify({"status": "success"}), 200
-        else:
-            # Return error for invalid password
-            return jsonify({"status": "failed"}), 401
+            # Check password
+            if bcrypt.check_password_hash(user.password, password):
+                # Log the user in
+                login_user(user)
+
+                # Return a JSON response with user details
+                user_data = {
+                    "status": "success",
+                    "user": {
+                        "id": user.uid,
+                        "profile_picture": f"{domain_url}/static/profile_pictures/picture1.jpg",
+                        "username": user.username,
+                        "email": user.email,
+                        "mobile_no": user.mobile_no,
+                        "address": user.address,
+                        "role": user.role
+                    }
+                }
+                return jsonify(user_data), 200
+            else:
+                # Return error for invalid password
+                return jsonify({"status": "failed", "message": "Invalid password"}), 401
 
     @app.route('/logout')
     def logout():
