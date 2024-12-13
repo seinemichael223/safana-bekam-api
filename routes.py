@@ -74,7 +74,7 @@ def register_routes(app, db, bcrypt):
                         "email": user.email,
                         "mobile_no": user.mobile_no,
                         "address": user.address,
-                        "role": user.role
+                        "role": [user.role]
                     }
                 }
                 return jsonify(user_data), 200
