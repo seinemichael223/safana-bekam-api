@@ -1,9 +1,17 @@
 from flask import render_template, request, redirect, url_for, jsonify, Response
 from flask_login import login_user, logout_user, current_user, login_required
-import json
+import json, os
 
 from models import User
 
+def get_domain_url():
+    try:
+        with open('secret.txt', 'r') as file:
+            return file.read().strip()  # Remove any trailing newline or spaces
+    except FileNotFoundError:
+        raise Exception("secret.txt not found. Please add it to the root directory.")
+
+domain_url = get_domain_url()
 
 def register_routes(app, db, bcrypt):
 
@@ -19,10 +27,18 @@ def register_routes(app, db, bcrypt):
             email = request.form.get('email')
             username = request.form.get('username')
             password = request.form.get('password')
+            mobile_no = request.form.get('mobile_no')
+            address = request.form.get('address')
+            role = request.form.get('role')
 
             hashed_password = bcrypt.generate_password_hash(password)
 
-            user = User(email=email, username=username, password=hashed_password)
+            user = User(email=email,
+                        username=username,
+                        password=hashed_password,
+                        mobile_no=mobile_no,
+                        address=address,
+                        role=role)
 
             db.session.add(user)
             db.session.commit()
@@ -71,9 +87,13 @@ def register_routes(app, db, bcrypt):
             users = User.query.all()
             user_list = [{
                 'id': user.uid,
-                'email': user.email,
+                'profile_picture': f"{domain_url}/static/profile_pictures/picture1.jpg",
                 'username': user.username,
-                'password': user.password
+                'email': user.email,
+                'password': user.password,
+                'mobile_no': user.mobile_no,
+                'address': user.address,
+                'role': user.role
             } for user in users]
 
         # Convert the user list to JSON and return as a downloadable response

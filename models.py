@@ -9,6 +9,9 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), unique=True, nullable=False)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(250), nullable=False)
+    mobile_no = db.Column(db.String(12), nullable=False)
+    address = db.Column(db.String(150), nullable=False)
+    role = db.Column(db.String(10), nullable=False)
 
     def get_id(self):
         return self.uid
