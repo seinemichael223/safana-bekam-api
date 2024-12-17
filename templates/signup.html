@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 {% block title %}Signup{% endblock %}
 
@@ -9,13 +10,11 @@
     <input type="password" name="password" placeholder="Password" required="required"><br>
     <input type="text" name="mobile_no" placeholder="Mobile Number" required="required"><br>
     <input type="text" name="address" placeholder="Address" required="required"><br>
-    <label for="role">Role:</label>
-    <select name="role" required="required">
-        <option value="admin">Admin</option>
-        <option value="therapist">Therapist</option>
-    </select><br>
+
+    <label>Role:</label><br>
+    <input type="checkbox" name="role" value="admin"> Admin<br>
+    <input type="checkbox" name="role" value="therapist"> Therapist<br>
+
     <input type="submit" value="Sign Up">
 </form>
-
 {% endblock %}
-
