@@ -17,8 +17,18 @@ class User(db.Model, UserMixin):
         return self.uid
 
 class Patient(db.Model):
-    __tablename__ = "patients"
+    __tablename__ = "patients"  # Table for patients
 
     pid = db.Column(db.Integer, primary_key=True)
-    p_name = db.Column(db.String(100), unique=True, nullable=False)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    mykad = db.Column(db.String(50), unique=True, nullable=False)
+    gender = db.Column(db.String(250), nullable=False)
+    ethnicity = db.Column(db.String(40), nullable=False)
+    p_mobile_no = db.Column(db.String(14), nullable=False)
+    p_email = db.Column(db.String(150), nullable=False)
+    postcode = db.Column(db.String(8), nullable=False)
+    state = db.Column(db.String(20), nullable=False)
+    address = db.Column(db.String(250), nullable=False)
 
+    def get_id(self):
+        return self.pid

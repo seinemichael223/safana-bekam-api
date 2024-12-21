@@ -2,7 +2,7 @@ from flask import render_template, request, redirect, url_for, jsonify, Response
 from flask_login import login_user, logout_user, current_user, login_required
 import json, os
 
-from models import User
+from models import User, Patient
 
 
 def get_domain_url():
@@ -139,6 +139,42 @@ def register_routes(app, db, bcrypt):
             return response
         except Exception as e:
             return f"An error occurred: {str(e)}", 500
+
+    @app.route("/register-patient", methods=["GET", "POST"])
+    def register_patient():
+        if request.method == "GET":
+            return render_template("patient.html")
+        elif request.method == "POST":
+            # Extract form data
+            name = request.form.get("name")
+            mykad = request.form.get("mykad")
+            gender = request.form.get("gender")
+            ethnicity = request.form.get("ethnicity")
+            p_mobile_no = request.form.get("p_mobile_no")
+            p_email = request.form.get("p_email")
+            postcode = request.form.get("postcode")
+            state = request.form.get("state")
+            address = request.form.get("address")
+            
+            # Create a new Patient object
+            patient = Patient(
+                name=name,
+                mykad=mykad,
+                gender=gender,
+                ethnicity=ethnicity,
+                p_mobile_no=p_mobile_no,
+                p_email=p_email,
+                postcode=postcode,
+                state=state,
+                address=address,
+            )
+            
+            # Save the patient to the database
+            db.session.add(patient)
+            db.session.commit()
+            
+            return redirect(url_for("index"))
+
 
 
 # Testing LazyGit~

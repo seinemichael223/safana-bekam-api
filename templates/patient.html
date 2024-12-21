@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Register Patient{% endblock %}
+
+{% block content %}
+<h1>Register Patient</h1>
+<form action="{{ url_for('register_patient') }}" method="POST">
+    <label for="name">Name:</label><br>
+    <input type="text" id="name" name="name" placeholder="Full Name" required><br><br>
+    
+    <label for="mykad">MyKad/ID:</label><br>
+    <input type="text" id="mykad" name="mykad" placeholder="MyKad/ID" required><br><br>
+    
+    <label for="gender">Gender:</label><br>
+    <select id="gender" name="gender" required>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+    </select><br><br>
+    
+    <label for="ethnicity">Ethnicity:</label><br>
+    <input type="text" id="ethnicity" name="ethnicity" placeholder="Ethnicity" required><br><br>
+    
+    <label for="p_mobile_no">Mobile Number:</label><br>
+    <input type="text" id="p_mobile_no" name="p_mobile_no" placeholder="Mobile Number" required><br><br>
+    
+    <label for="p_email">Email:</label><br>
+    <input type="email" id="p_email" name="p_email" placeholder="Email" required><br><br>
+    
+    <label for="postcode">Postcode:</label><br>
+    <input type="text" id="postcode" name="postcode" placeholder="Postcode" required><br><br>
+    
+    <label for="state">State:</label><br>
+    <select id="state" name="state" required>
+        <option value="Johor">Johor</option>
+        <option value="Kedah">Kedah</option>
+        <option value="Kelantan">Kelantan</option>
+        <option value="Malacca">Malacca</option>
+        <option value="Negeri Sembilan">Negeri Sembilan</option>
+        <option value="Pahang">Pahang</option>
+        <option value="Penang">Penang</option>
+        <option value="Perak">Perak</option>
+        <option value="Perlis">Perlis</option>
+        <option value="Sabah">Sabah</option>
+        <option value="Sarawak">Sarawak</option>
+        <option value="Selangor">Selangor</option>
+        <option value="Terengganu">Terengganu</option>
+        <option value="Kuala Lumpur">Kuala Lumpur</option>
+        <option value="Labuan">Labuan</option>
+        <option value="Putrajaya">Putrajaya</option>
+    </select><br><br>
+    
+    <label for="address">Address:</label><br>
+    <textarea id="address" name="address" placeholder="Address" rows="4" cols="50" required></textarea><br><br>
+    
+    <input type="submit" value="Register Patient">
+</form>
+{% endblock %}
+
