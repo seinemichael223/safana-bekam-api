@@ -15,3 +15,10 @@ class User(db.Model, UserMixin):
 
     def get_id(self):
         return self.uid
+
+class Patient(db.Model):
+    __tablename__ = "patients"
+
+    pid = db.Column(db.Integer, primary_key=True)
+    p_name = db.Column(db.String(100), unique=True, nullable=False)
+
