@@ -186,4 +186,38 @@ def register_routes(app, db, bcrypt):
         except Exception as e:
             return jsonify({"status": "failed", "message": str(e)}), 500
 
+    @app.route("/export-patients", methods=["GET"])
+    @login_required
+    def export_patients():
+        try:
+            # Retrieve all patients from the database
+            patients = Patient.query.all()
+
+            # Create a list of patient dictionaries
+            patient_list = [
+                {
+                    "id": patient.pid,
+                    "name": patient.name,
+                    "mykad": patient.mykad,
+                    "gender": patient.gender,
+                    "ethnicity": patient.ethnicity,
+                    "p_mobile_no": patient.p_mobile_no,
+                    "p_email": patient.p_email,
+                    "postcode": patient.postcode,
+                    "state": patient.state,
+                    "address": patient.address,
+                }
+                for patient in patients
+            ]
+
+            # Create a JSON response
+            response = Response(
+                json.dumps(patient_list, ensure_ascii=False, indent=4),
+                mimetype="application/json",
+            )
+            return response
+
+        except Exception as e:
+            return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
+
 
