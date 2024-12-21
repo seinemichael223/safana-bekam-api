@@ -158,12 +158,18 @@ def register_routes(app, db, bcrypt):
             postcode = data.get("postcode")
             state = data.get("state")
             address = data.get("address")
+            occupation = data.get("occupation")
+            medical_history = data.get("medical_history", [])  # Default to empty list if not provided
 
             # Validate required fields
-            required_fields = ["name", "mykad", "gender", "ethnicity", "p_mobile_no", "p_email", "postcode", "state", "address"]
+            required_fields = ["name", "mykad", "gender", "ethnicity", "p_mobile_no", "p_email", "postcode", "state", "address", "occupation"]
             missing_fields = [field for field in required_fields if not data.get(field)]
             if missing_fields:
                 return jsonify({"status": "failed", "message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+
+            # Validate medical history (optional, ensure it's a list)
+            if not isinstance(medical_history, list):
+                return jsonify({"status": "failed", "message": "Medical history must be a list"}), 400
 
             # Create and save the patient
             patient = Patient(
@@ -176,6 +182,8 @@ def register_routes(app, db, bcrypt):
                 postcode=postcode,
                 state=state,
                 address=address,
+                occupation=occupation,
+                medical_history=json.dumps(medical_history),  # Convert list to JSON string
             )
 
             db.session.add(patient)
@@ -206,6 +214,8 @@ def register_routes(app, db, bcrypt):
                     "postcode": patient.postcode,
                     "state": patient.state,
                     "address": patient.address,
+                    "occupation": patient.occupation,
+                    "medical_history": json.loads(patient.medical_history) if patient.medical_history else [],  # Convert JSON string to list
                 }
                 for patient in patients
             ]
@@ -219,5 +229,4 @@ def register_routes(app, db, bcrypt):
 
         except Exception as e:
             return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
-
 

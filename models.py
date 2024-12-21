@@ -26,9 +26,11 @@ class Patient(db.Model):
     ethnicity = db.Column(db.String(40), nullable=False)
     p_mobile_no = db.Column(db.String(14), nullable=False)
     p_email = db.Column(db.String(150), nullable=False)
-    postcode = db.Column(db.String(8), nullable=False)
-    state = db.Column(db.String(20), nullable=False)
+    postcode = db.Column(db.String(9), nullable=False)
+    state = db.Column(db.String(30), nullable=False)
     address = db.Column(db.String(250), nullable=False)
+    occupation = db.Column(db.String(80), nullable=False)
+    medical_history = db.Column(db.String(500), nullable=True)
 
     def get_id(self):
         return self.pid

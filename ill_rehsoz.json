@@ -1,0 +1,14 @@
+{
+    "name": "John Doe",
+    "mykad": "123456789012",
+    "gender": "Male",
+    "ethnicity": "Malay",
+    "p_mobile_no": "0123456789",
+    "p_email": "johndoe@example.com",
+    "postcode": "12345",
+    "state": "Selangor",
+    "address": "123, Jalan Example, 43000 Kajang",
+    "occupation": "Software Engineer",
+    "medical_history": ["High Blood Pressure", "Migraine", "Insane", "Automatic"]
+}
+
