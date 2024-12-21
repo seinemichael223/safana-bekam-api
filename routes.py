@@ -140,23 +140,32 @@ def register_routes(app, db, bcrypt):
         except Exception as e:
             return f"An error occurred: {str(e)}", 500
 
-    @app.route("/register-patient", methods=["GET", "POST"])
+    @app.route("/register-patient", methods=["POST"])
     def register_patient():
-        if request.method == "GET":
-            return render_template("patient.html")
-        elif request.method == "POST":
-            # Extract form data
-            name = request.form.get("name")
-            mykad = request.form.get("mykad")
-            gender = request.form.get("gender")
-            ethnicity = request.form.get("ethnicity")
-            p_mobile_no = request.form.get("p_mobile_no")
-            p_email = request.form.get("p_email")
-            postcode = request.form.get("postcode")
-            state = request.form.get("state")
-            address = request.form.get("address")
-            
-            # Create a new Patient object
+        try:
+            # Parse JSON data from the request
+            data = request.get_json()
+            if not data:
+                return jsonify({"status": "failed", "message": "No JSON payload received"}), 400
+
+            # Extract data
+            name = data.get("name")
+            mykad = data.get("mykad")
+            gender = data.get("gender")
+            ethnicity = data.get("ethnicity")
+            p_mobile_no = data.get("p_mobile_no")
+            p_email = data.get("p_email")
+            postcode = data.get("postcode")
+            state = data.get("state")
+            address = data.get("address")
+
+            # Validate required fields
+            required_fields = ["name", "mykad", "gender", "ethnicity", "p_mobile_no", "p_email", "postcode", "state", "address"]
+            missing_fields = [field for field in required_fields if not data.get(field)]
+            if missing_fields:
+                return jsonify({"status": "failed", "message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+
+            # Create and save the patient
             patient = Patient(
                 name=name,
                 mykad=mykad,
@@ -168,13 +177,13 @@ def register_routes(app, db, bcrypt):
                 state=state,
                 address=address,
             )
-            
-            # Save the patient to the database
+
             db.session.add(patient)
             db.session.commit()
-            
-            return redirect(url_for("index"))
+
+            return jsonify({"status": "success", "message": "Patient registered successfully"}), 201
+
+        except Exception as e:
+            return jsonify({"status": "failed", "message": str(e)}), 500
 
 
-
-# Testing LazyGit~
