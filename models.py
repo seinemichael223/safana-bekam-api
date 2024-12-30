@@ -20,7 +20,7 @@ class Patient(db.Model):
     __tablename__ = "patients"  # Table for patients
 
     pid = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
+    name = db.Column(db.String(100), unique=False, nullable=False)
     mykad = db.Column(db.String(50), unique=True, nullable=False)
     gender = db.Column(db.String(250), nullable=False)
     ethnicity = db.Column(db.String(40), nullable=False)

@@ -140,30 +140,26 @@ def register_routes(app, db, bcrypt):
         except Exception as e:
             return f"An error occurred: {str(e)}", 500
 
+
     @app.route("/register-patient", methods=["POST"])
     def register_patient():
         try:
-            # Parse JSON data from the request
-            data = request.get_json()
-            if not data:
-                return jsonify({"status": "failed", "message": "No JSON payload received"}), 400
-
-            # Extract data
-            name = data.get("name")
-            mykad = data.get("mykad")
-            gender = data.get("gender")
-            ethnicity = data.get("ethnicity")
-            p_mobile_no = data.get("p_mobile_no")
-            p_email = data.get("p_email")
-            postcode = data.get("postcode")
-            state = data.get("state")
-            address = data.get("address")
-            occupation = data.get("occupation")
-            medical_history = data.get("medical_history", [])  # Default to empty list if not provided
+            # Extract data from form
+            name = request.form.get("name")
+            mykad = request.form.get("mykad")
+            gender = request.form.get("gender")
+            ethnicity = request.form.get("ethnicity")
+            p_mobile_no = request.form.get("p_mobile_no")
+            p_email = request.form.get("p_email")
+            postcode = request.form.get("postcode")
+            state = request.form.get("state")
+            address = request.form.get("address")
+            occupation = request.form.get("occupation")
+            medical_history = request.form.getlist("medical_history")  # Handles multiple values for a form field
 
             # Validate required fields
             required_fields = ["name", "mykad", "gender", "ethnicity", "p_mobile_no", "p_email", "postcode", "state", "address", "occupation"]
-            missing_fields = [field for field in required_fields if not data.get(field)]
+            missing_fields = [field for field in required_fields if not request.form.get(field)]
             if missing_fields:
                 return jsonify({"status": "failed", "message": f"Missing fields: {', '.join(missing_fields)}"}), 400
 
