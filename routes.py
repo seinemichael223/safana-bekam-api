@@ -1,10 +1,9 @@
 from flask import render_template, request, redirect, url_for, jsonify, Response
 from flask_login import login_user, logout_user, current_user, login_required
 import json, os
+from datetime import datetime
 
 from models import User, Patient, PatientRecord, AcupuncturePoint
-
-
 def get_domain_url():
     try:
         with open("secret.txt", "r") as file:
@@ -107,7 +106,6 @@ def register_routes(app, db, bcrypt):
         return "My secret message"
 
     @app.route("/export-users", methods=["GET"])
-    @login_required
     def export_users():
         try:
             users = User.query.all()
@@ -191,7 +189,6 @@ def register_routes(app, db, bcrypt):
             return jsonify({"status": "failed", "message": str(e)}), 500
 
     @app.route("/export-patients", methods=["GET"])
-    @login_required
     def export_patients():
         try:
             # Retrieve all patients from the database
@@ -225,4 +222,81 @@ def register_routes(app, db, bcrypt):
 
         except Exception as e:
             return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
+
+    @app.route("/insert-data", methods=["GET"])
+    def insert_data():
+        hashed_password_1= bcrypt.generate_password_hash("rehsoz")
+        user1 = User(
+            email="rehsoz@gmail.com",
+            username="rehsoz",
+            password=hashed_password_1,
+            mobile_no="123456789",
+            address="Gogai Street",
+            role="therapists"
+        )
+        
+        hashed_password_2= bcrypt.generate_password_hash("mendow")
+        user2 = User(
+            email="mendow@gmail.com",
+            username="mendow",
+            password=hashed_password_2,
+            mobile_no="123456789",
+            address="Mendow Street",
+            role="admin"
+        )
+
+        hashed_password_3= bcrypt.generate_password_hash("testingBot")
+        user3 = User(
+            email="testingBot@gmail.com",
+            username="testingBot",
+            password=hashed_password_3,
+            mobile_no="123456789",
+            address="CCK Street",
+            role="both"
+        )
+
+        patient1 = Patient(
+            name="John Doe",
+            mykad="123456789012",
+            gender="Male",
+            ethnicity="Malay",
+            p_mobile_no="1234567890",
+            p_email="johndoe@example.com",
+            postcode="12345",
+            state="Selangor",
+            address="123 Patient Street",
+            occupation="Engineer",
+            medical_history="Diabetes, Hypertension",
+            treatment_history="Acupuncture therapy in 2022"
+        )
+
+        record1 = PatientRecord(
+            date=datetime.now(),
+            blood_pressure_before="120/80",
+            blood_pressure_after="118/78",
+            package="Standard",
+            health_complications="Mild headache",
+            comments="Patient responded well",
+            patient_id=1,  # Assuming this matches the patient primary key
+            therapist_id=3  # Assuming this matches the user primary key
+        )
+
+        point1 = AcupuncturePoint(
+            body_part="Front",
+            coordinate_x=10,
+            coordinate_y=20,
+            skin_reaction=2,
+            blood_quantity=5,
+            record_id=1  # Assuming this matches the patient record primary key
+        )
+
+        db.session.add_all([user1, user2, user3, patient1])
+        db.session.commit()
+
+        db.session.add(record1)
+        db.session.commit()
+
+        db.session.add(point1)
+        db.session.commit()
+        return redirect(url_for("index"))
 
