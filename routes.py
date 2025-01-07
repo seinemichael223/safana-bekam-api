@@ -2,7 +2,7 @@ from flask import render_template, request, redirect, url_for, jsonify, Response
 from flask_login import login_user, logout_user, current_user, login_required
 import json, os
 
-from models import User, Patient
+from models import User, Patient, PatientRecord, AcupuncturePoint
 
 
 def get_domain_url():
