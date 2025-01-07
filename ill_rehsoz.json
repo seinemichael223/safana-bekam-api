@@ -1,14 +1,40 @@
 {
-    "name": "John Doe",
-    "mykad": "123456789012",
-    "gender": "Male",
-    "ethnicity": "Malay",
-    "p_mobile_no": "0123456789",
-    "p_email": "johndoe@example.com",
-    "postcode": "12345",
-    "state": "Selangor",
-    "address": "123, Jalan Example, 43000 Kajang",
-    "occupation": "Software Engineer",
-    "medical_history": ["High Blood Pressure", "Migraine", "Insane", "Automatic"]
+  "patient_id": "1",
+  "therapist_id": "1",
+  "created_data": "2024-12-12",
+  "blood_pressure_before": "120/80",
+  "blood_pressure_after": "115/75",
+  "package": "Basic",
+  "health_complications": "None",
+  "comments": "Routine check-up",
+  "remarks": [
+    {
+      "body_part": "Front",
+      "acupoint": [
+        {
+          "coordinate_x": "50",
+          "coordinate_y": "100",
+          "skin_reaction": "2",
+          "blood_quantity": "1"
+        },
+        {
+          "coordinate_x": "60",
+          "coordinate_y": "110",
+          "skin_reaction": "3",
+          "blood_quantity": "2"
+        }
+      ]
+    },
+    {
+      "body_part": "Back",
+      "acupoint": [
+        {
+          "coordinate_x": "70",
+          "coordinate_y": "120",
+          "skin_reaction": "1",
+          "blood_quantity": "1"
+        }
+      ]
+    }
+  ]
 }
-

@@ -223,6 +223,72 @@ def register_routes(app, db, bcrypt):
         except Exception as e:
             return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
 
+
+    @app.route("/submit-treatment", methods=["POST"])
+    def submit_treatment():
+        if request.method == "POST":
+            # Extract primary record data from form
+            patient_id = request.form.get("patient_id")
+            therapist_id = request.form.get("therapist_id")
+            date = request.form.get("created_data")
+            blood_pressure_before = request.form.get("blood_pressure_before")
+            blood_pressure_after = request.form.get("blood_pressure_after")
+            package = request.form.get("package")
+            health_complications = request.form.get("health_complications")
+            comments = request.form.get("comments")
+
+            if not all([date, patient_id, therapist_id, blood_pressure_before, blood_pressure_after, package, health_complications, comments]):
+                return jsonify({"status": "error", "message": "Missing required fields"}), 400
+
+            # Create a new patient record
+            new_record = PatientRecord(
+                patient_id=patient_id,
+                therapist_id=therapist_id,
+                date=date,
+                blood_pressure_before=blood_pressure_before,
+                blood_pressure_after=blood_pressure_after,
+                package=package,
+                health_complications=health_complications,
+                comments=comments,
+            )
+
+            db.session.add(new_record)
+            db.session.commit()
+
+            # Get the ID of the newly created patient record
+            record_id = new_record.record_id
+
+            # Extract and process remarks and acupuncture points
+            remarks = request.form.getlist("remarks")  # Get list of remarks
+            for remark in remarks:
+                # Assuming `remarks` is a serialized JSON string, decode it
+                remark_data = json.loads(remark)
+                body_part = remark_data.get("body_part")
+                acupoints = remark_data.get("acupoint", [])
+
+                for acupoint in acupoints:
+                    coordinate_x = acupoint.get("coordinate_x")
+                    coordinate_y = acupoint.get("coordinate_y")
+                    skin_reaction = acupoint.get("skin_reaction")
+                    blood_quantity = acupoint.get("blood_quantity")
+
+                    # Create a new acupuncture point record
+                    new_acupuncture_point = AcupuncturePoint(
+                        record_id=record_id,
+                        body_part=body_part,
+                        coordinate_x=coordinate_x,
+                        coordinate_y=coordinate_y,
+                        skin_reaction=skin_reaction,
+                        blood_quantity=blood_quantity,
+                    )
+
+                    db.session.add(new_acupuncture_point)
+
+            # Commit all changes to the database
+            db.session.commit()
+
+            return jsonify({"status": "success", "message": "Treatment submitted successfully!"}), 201
+
     @app.route("/insert-data", methods=["GET"])
     def insert_data():
         hashed_password_1= bcrypt.generate_password_hash("rehsoz")
