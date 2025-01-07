@@ -7,8 +7,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: rehsozEvilDeedz
       MYSQL_DATABASE: safana_db
-      MYSQL_USER: rehsoz
-      MYSQL_PASSWORD: beanz
+      MYSQL_USER: virtuosa
+      MYSQL_PASSWORD: cello
     ports:
       - "3306:3306"
     volumes:
@@ -19,7 +19,7 @@ services:
       context: .
     container_name: safana-bekam-api
     environment:
-      DATABASE_URI: "mysql+pymysql://rehsoz:beanz@mariadb:3306/safana_db"
+      DATABASE_URI: "mysql+pymysql://virtuosa:cello@mariadb:3306/safana_db"
     depends_on:
       - mariadb
     ports:
@@ -28,3 +28,14 @@ services:
       - .:/safana-bekam-api
     command: ["/safana-bekam-api/entrypoint.sh"]
 
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    ports:
+      - "5001:80"
+    depends_on:
+      - mariadb
+    environment:
+      PMA_HOST: mariadb
+      PMA_USER: virtuosa
+      PMA_PASSWORD: cello

@@ -1,5 +1,5 @@
 CREATE DATABASE IF NOT EXISTS safana_db;
-CREATE USER 'rehsoz'@'localhost' IDENTIFIED BY 'beanz';
-GRANT ALL PRIVILEGES ON safana_db.* TO 'rehsoz'@'%';
+CREATE USER 'virtuosa'@'localhost' IDENTIFIED BY 'cello';
+GRANT ALL PRIVILEGES ON safana_db.* TO 'virtuosa'@'%';
 FLUSH PRIVILEGES;
 
