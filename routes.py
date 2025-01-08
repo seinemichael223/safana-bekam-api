@@ -223,71 +223,63 @@ def register_routes(app, db, bcrypt):
         except Exception as e:
             return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
 
-
-    @app.route("/submit-treatment", methods=["POST"])
+    @app.route('/submit-treatment', methods=['POST'])
     def submit_treatment():
-        if request.method == "POST":
-            # Extract primary record data from form
-            patient_id = request.form.get("patient_id")
-            therapist_id = request.form.get("therapist_id")
-            date = request.form.get("created_data")
-            blood_pressure_before = request.form.get("blood_pressure_before")
-            blood_pressure_after = request.form.get("blood_pressure_after")
-            package = request.form.get("package")
-            health_complications = request.form.get("health_complications")
-            comments = request.form.get("comments")
+        try:
+            # Parse data from the request
+            data = request.get_json()
 
-            if not all([date, patient_id, therapist_id, blood_pressure_before, blood_pressure_after, package, health_complications, comments]):
-                return jsonify({"status": "error", "message": "Missing required fields"}), 400
+            # Extract treatment details
+            patient_id = data.get('patient_id')
+            therapist_id = data.get('therapist_id')
+            created_date = data.get('created_date')
+            blood_pressure_before = data.get('blood_pressure_before')
+            blood_pressure_after = data.get('blood_pressure_after')
+            package = data.get('package')
+            health_complications = data.get('health_complications')
+            comments = data.get('comments')
+            acupuncture_points = data.get('acupuncture_point')
 
-            # Create a new patient record
-            new_record = PatientRecord(
-                patient_id=patient_id,
-                therapist_id=therapist_id,
-                date=date,
+            # Validate required fields
+            if not all([patient_id, therapist_id, created_date, blood_pressure_before, blood_pressure_after, package]):
+                return jsonify({'error': 'Missing required fields'}), 400
+
+            # Create and commit the PatientRecord
+            patient_record = PatientRecord(
+                date=datetime.strptime(created_date, '%Y-%m-%d'),
                 blood_pressure_before=blood_pressure_before,
                 blood_pressure_after=blood_pressure_after,
                 package=package,
-                health_complications=health_complications,
-                comments=comments,
+                health_complications=health_complications or '',
+                comments=comments or '',
+                patient_id=patient_id,
+                therapist_id=therapist_id
             )
+            db.session.add(patient_record)
+            db.session.flush()  # Flush to get the record_id for relationships
 
-            db.session.add(new_record)
-            db.session.commit()
-
-            # Get the ID of the newly created patient record
-            record_id = new_record.record_id
-
-            # Extract and process remarks and acupuncture points
-            remarks = request.form.getlist("remarks")  # Get list of remarks
-            for remark in remarks:
-                # Assuming `remarks` is a serialized JSON string, decode it
-                remark_data = json.loads(remark)
-                body_part = remark_data.get("body_part")
-                acupoints = remark_data.get("acupoint", [])
-
-                for acupoint in acupoints:
-                    coordinate_x = acupoint.get("coordinate_x")
-                    coordinate_y = acupoint.get("coordinate_y")
-                    skin_reaction = acupoint.get("skin_reaction")
-                    blood_quantity = acupoint.get("blood_quantity")
-
-                    # Create a new acupuncture point record
-                    new_acupuncture_point = AcupuncturePoint(
-                        record_id=record_id,
+            # Create and commit the AcupuncturePoint records
+            if acupuncture_points:
+                for point in acupuncture_points:
+                    body_part, coordinate_x, coordinate_y, skin_reaction, blood_quantity = point
+                    acupuncture_point = AcupuncturePoint(
                         body_part=body_part,
                         coordinate_x=coordinate_x,
                         coordinate_y=coordinate_y,
                         skin_reaction=skin_reaction,
                         blood_quantity=blood_quantity,
+                        record_id=patient_record.record_id
                     )
+                    db.session.add(acupuncture_point)
 
-                    db.session.add(new_acupuncture_point)
-
-            # Commit all changes to the database
+            # Commit all changes
             db.session.commit()
 
-            return jsonify({"status": "success", "message": "Treatment submitted successfully!"}), 201
+            return jsonify({'message': 'Treatment data submitted successfully'}), 201
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
 
     @app.route("/insert-data", methods=["GET"])
     def insert_data():

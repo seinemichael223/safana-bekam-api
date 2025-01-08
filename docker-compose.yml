@@ -30,7 +30,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin:latest
-    container_name: phpmyadmin
+    container_name: phpmyadmin-safana
     ports:
       - "5001:80"
     depends_on:
