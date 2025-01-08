@@ -233,6 +233,7 @@ def register_routes(app, db, bcrypt):
             patient_id = data.get('patient_id')
             therapist_id = data.get('therapist_id')
             created_date = data.get('created_date')
+            frequency = data.get('frequency')
             blood_pressure_before = data.get('blood_pressure_before')
             blood_pressure_after = data.get('blood_pressure_after')
             package = data.get('package')
@@ -241,12 +242,13 @@ def register_routes(app, db, bcrypt):
             acupuncture_points = data.get('acupuncture_point')
 
             # Validate required fields
-            if not all([patient_id, therapist_id, created_date, blood_pressure_before, blood_pressure_after, package]):
+            if not all([patient_id, therapist_id, created_date, frequency, blood_pressure_before, blood_pressure_after, package]):
                 return jsonify({'error': 'Missing required fields'}), 400
 
             # Create and commit the PatientRecord
             patient_record = PatientRecord(
                 date=datetime.strptime(created_date, '%Y-%m-%d'),
+                frequency=frequency,
                 blood_pressure_before=blood_pressure_before,
                 blood_pressure_after=blood_pressure_after,
                 package=package,
@@ -330,6 +332,7 @@ def register_routes(app, db, bcrypt):
 
         record1 = PatientRecord(
             date=datetime.now(),
+            frequency="3",
             blood_pressure_before="120/80",
             blood_pressure_after="118/78",
             package="Standard",

@@ -42,6 +42,7 @@ class PatientRecord(db.Model):
 
     record_id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime, nullable=False)
+    frequency = db.Column(db.Integer, nullable=False)
     blood_pressure_before = db.Column(db.String(10), nullable=False)
     blood_pressure_after = db.Column(db.String(10), nullable=False)
     package = db.Column(db.String(80), nullable=False)
