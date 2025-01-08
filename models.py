@@ -1,6 +1,7 @@
 from flask_login import UserMixin
 from sqlalchemy import NotNullable, Nullable, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.types import Float
 from app import db
 
 class User(db.Model, UserMixin):
@@ -64,8 +65,8 @@ class AcupuncturePoint(db.Model):
 
     point_id = db.Column(db.Integer, primary_key=True)
     body_part = db.Column(db.String(20), nullable=False)
-    coordinate_x = db.Column(db.Integer, nullable=False)
-    coordinate_y = db.Column(db.Integer, nullable=False)
+    coordinate_x = db.Column(db.Float, nullable=False)
+    coordinate_y = db.Column(db.Float, nullable=False)
     skin_reaction = db.Column(db.Integer, nullable=False)
     blood_quantity = db.Column(db.Integer, nullable=False)
 
