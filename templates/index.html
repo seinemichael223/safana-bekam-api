@@ -20,5 +20,15 @@
 <a href="{{ url_for('export_patients') }}">Export Patients</a>
 <a href="{{ url_for('insert_data') }}">Insert Data</a>
 <a href="{{ url_for('submit_treatment') }}">Submit Treatment</a>
+<form action="{{ url_for('export_patient_records') }}" method="POST">
+    <input type="number" name="patient_id" placeholder="Patient ID" required="required"><br>
+    <input type="submit" value="Find Patient">
+</form>
+
+<form action="{{ url_for('export_patient_record_visit') }}" method="POST">
+    <input type="number" name="patient_id" placeholder="Patient ID" required="required"><br>
+    <input type="number" name="record_id" placeholder="Record ID" required="required"><br>
+    <input type="submit" value="Find Record">
+</form>
 
 {% endblock %}

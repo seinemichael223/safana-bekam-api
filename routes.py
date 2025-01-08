@@ -283,6 +283,125 @@ def register_routes(app, db, bcrypt):
             db.session.rollback()
             return jsonify({'error': str(e)}), 500
 
+
+
+    @app.route("/export-patient-record", methods=["POST"])
+    def export_patient_records():
+        try:
+            # Get patient ID from form data
+            patient_id = request.form.get("patient_id")
+
+            if not patient_id:
+                return jsonify({"status": "failed", "message": "Patient ID is required"}), 400
+
+            # Query the patient records for the given patient ID
+            patient_records = PatientRecord.query.filter_by(patient_id=patient_id).all()
+
+            if not patient_records:
+                return jsonify({"status": "failed", "message": "No records found for the given patient ID"}), 404
+
+            # Prepare data
+            records_data = []
+
+            for record in patient_records:
+                # Query acupuncture points related to the record
+                acupoints = AcupuncturePoint.query.filter_by(record_id=record.record_id).all()
+
+                # Group acupuncture points by body part
+                remarks = {}
+                for acupoint in acupoints:
+                    body_part = acupoint.body_part
+                    if body_part not in remarks:
+                        remarks[body_part] = []
+                    remarks[body_part].append({
+                        "coordinate_x": acupoint.coordinate_x,
+                        "coordinate_y": acupoint.coordinate_y,
+                        "skin_reaction": acupoint.skin_reaction,
+                        "blood_quantity": acupoint.blood_quantity,
+                    })
+
+                # Convert remarks dictionary into the required format
+                remarks_list = [
+                    {"body_part": part, "acupoint": points} for part, points in remarks.items()
+                ]
+
+                # Append record data
+                records_data.append({
+                    "id": record.record_id,
+                    "patient_id": record.patient_id,
+                    "therapist_id": record.therapist_id,
+                    "created_data": record.date.strftime("%d/%m/%Y"),
+                    "frequency": record.frequency,
+                    "blood_pressure_before": record.blood_pressure_before,
+                    "blood_pressure_after": record.blood_pressure_after,
+                    "package": record.package,
+                    "health_complications": record.health_complications,
+                    "comments": record.comments,
+                    "remarks": remarks_list,
+                })
+
+            return jsonify({"status": "success", "data": records_data}), 200
+
+        except Exception as e:
+            return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
+
+    @app.route("/export-patient-record-visit", methods=["POST"])
+    def export_patient_record_visit():
+        try:
+            # Get patient ID and frequency from form data
+            patient_id = request.form.get("patient_id")
+            record_id = request.form.get("record_id")
+
+            if not patient_id or not record_id:
+                return jsonify({"status": "failed", "message": "Patient ID and Record ID are required"}), 400
+
+            # Query the patient record for the given patient ID and record id
+            record = PatientRecord.query.filter_by(patient_id=patient_id, record_id=record_id).first()
+
+            if not record:
+                return jsonify({"status": "failed", "message": "No record found for the given patient ID and record ID"}), 404
+
+            # Query acupuncture points related to the record
+            acupoints = AcupuncturePoint.query.filter_by(record_id=record.record_id).all()
+
+            # Group acupuncture points by body part
+            remarks = {}
+            for acupoint in acupoints:
+                body_part = acupoint.body_part
+                if body_part not in remarks:
+                    remarks[body_part] = []
+                remarks[body_part].append({
+                    "coordinate_x": acupoint.coordinate_x,
+                    "coordinate_y": acupoint.coordinate_y,
+                    "skin_reaction": acupoint.skin_reaction,
+                    "blood_quantity": acupoint.blood_quantity,
+                })
+
+            # Convert remarks dictionary into the required format
+            remarks_list = [
+                {"body_part": part, "acupoint": points} for part, points in remarks.items()
+            ]
+
+            # Prepare the data
+            record_data = {
+                "id": record.record_id,
+                "patient_id": record.patient_id,
+                "therapist_id": record.therapist_id,
+                "created_data": record.date.strftime("%d/%m/%Y"),
+                "frequency": record.frequency,
+                "blood_pressure_before": record.blood_pressure_before,
+                "blood_pressure_after": record.blood_pressure_after,
+                "package": record.package,
+                "health_complications": record.health_complications,
+                "comments": record.comments,
+                "remarks": remarks_list,
+            }
+
+            return jsonify({"status": "success", "data": record_data}), 200
+
+        except Exception as e:
+            return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
+
     @app.route("/insert-data", methods=["GET"])
     def insert_data():
         hashed_password_1= bcrypt.generate_password_hash("rehsoz")
@@ -332,32 +451,60 @@ def register_routes(app, db, bcrypt):
 
         record1 = PatientRecord(
             date=datetime.now(),
-            frequency="3",
+            frequency="1",
             blood_pressure_before="120/80",
             blood_pressure_after="118/78",
             package="Standard",
             health_complications="Mild headache",
             comments="Patient responded well",
             patient_id=1,  # Assuming this matches the patient primary key
-            therapist_id=3  # Assuming this matches the user primary key
+            therapist_id=1  # Assuming this matches the user primary key
         )
 
+        record2 = PatientRecord(
+            date=datetime.now(),
+            frequency="2",
+            blood_pressure_before="120/80",
+            blood_pressure_after="118/78",
+            package="Special",
+            health_complications="Evil",
+            comments="Patient responded well enough",
+            patient_id=1,  # Assuming this matches the patient primary key
+            therapist_id=1  # Assuming this matches the user primary key
+        )
         point1 = AcupuncturePoint(
             body_part="Front",
-            coordinate_x=10,
-            coordinate_y=20,
+            coordinate_x=10.54,
+            coordinate_y=24.44,
             skin_reaction=2,
             blood_quantity=5,
             record_id=1  # Assuming this matches the patient record primary key
         )
 
+        point2 = AcupuncturePoint(
+            body_part="Back",
+            coordinate_x=10.12,
+            coordinate_y=29.31,
+            skin_reaction=2,
+            blood_quantity=5,
+            record_id=1  # Assuming this matches the patient record primary key
+        )
+
+        point3 = AcupuncturePoint(
+            body_part="Front",
+            coordinate_x=101.24,
+            coordinate_y=205.50,
+            skin_reaction=2,
+            blood_quantity=5,
+            record_id=2  # Assuming this matches the patient record primary key
+        )
         db.session.add_all([user1, user2, user3, patient1])
         db.session.commit()
 
-        db.session.add(record1)
+        db.session.add_all([record1, record2])
         db.session.commit()
 
-        db.session.add(point1)
+        db.session.add_all([point1, point2, point3])
         db.session.commit()
         return redirect(url_for("index"))
 
