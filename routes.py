@@ -209,6 +209,7 @@ def register_routes(app, db, bcrypt):
                     "address": patient.address,
                     "occupation": patient.occupation,
                     "medical_history": json.loads(patient.medical_history) if patient.medical_history else [],  # Convert JSON string to list
+                    "treatment_history": json.loads(patient.treatment_history) if patient.treatment_history else [],  # Convert JSON string to list
                 }
                 for patient in patients
             ]
@@ -398,6 +399,37 @@ def register_routes(app, db, bcrypt):
             }
 
             return jsonify({"status": "success", "data": record_data}), 200
+
+        except Exception as e:
+            return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
+
+    @app.route("/export-patient-simplify", methods=["POST"])
+    def export_patient_simplify():
+        try:
+            # Get patient ID from form data
+            patient_id = request.form.get("patient_id")
+
+            if not patient_id:
+                return jsonify({"status": "failed", "message": "Patient ID is required"}), 400
+
+            # Query the patient records for the given patient ID
+            patient_records = PatientRecord.query.filter_by(patient_id=patient_id).all()
+
+            if not patient_records:
+                return jsonify({"status": "failed", "message": "No records found for the given patient ID"}), 404
+
+            # Prepare data
+            records_data = []
+
+            for record in patient_records:
+                records_data.append({
+                    "record_id": record.record_id,
+                    "frequency": record.frequency,
+                    "created_date": record.date.strftime("%Y-%m-%d"),
+                    "Package": record.package,
+                })
+
+            return jsonify({"status": "success", "patient_id": patient_id, "records": records_data}), 200
 
         except Exception as e:
             return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
