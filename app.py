@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
+from datetime import timedelta
 
 db = SQLAlchemy()
 
@@ -12,6 +13,7 @@ def create_app():
     #app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://rehsoz:beanz@localhost/safana_db'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://virtuosa:cello@mariadb:3306/safana_db'
     app.secret_key = 'SOME KEY'
+    app.permanent_session_lifetime = timedelta(days=14)
 
     db.init_app(app)
 

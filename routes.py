@@ -1,4 +1,3 @@
-
 from flask import render_template, request, redirect, url_for, jsonify, Response, session
 from flask_login import login_user, logout_user, current_user, login_required
 import json, os
@@ -80,9 +79,10 @@ def register_routes(app, db, bcrypt):
                 roles_as_list = role_mapping.get(user.role, [])
 
                 # Create session variables
+                session.permanent = True
                 session['username'] = user.username
                 session['user_id'] = user.uid
-                session['role'] = user.role
+                session['role'] = roles_as_list  # Store as a list
 
                 user_data = {
                     "status": "success",
@@ -93,7 +93,7 @@ def register_routes(app, db, bcrypt):
                         "email": user.email,
                         "mobile_no": user.mobile_no,
                         "address": user.address,
-                        "role": roles_as_list,  # Return as a list
+                        "role": roles_as_list,
                     },
                 }
                 return jsonify(user_data), 200
@@ -109,7 +109,7 @@ def register_routes(app, db, bcrypt):
     @app.route("/secret")
     def secret():
         # Check session variables
-        if not session.get('user_id') or session.get('role') != "admin":
+        if not session.get('user_id') or "admin" not in session.get('role', []):
             return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
         return "My secret message"
 
