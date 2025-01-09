@@ -116,6 +116,9 @@ def register_routes(app, db, bcrypt):
     @app.route("/export-users", methods=["GET"])
     def export_users():
         try:
+
+            if not session.get('user_id') or "admin" not in session.get('role', []):
+                return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
             users = User.query.all()
 
             role_mapping = {
@@ -147,80 +150,107 @@ def register_routes(app, db, bcrypt):
             return f"An error occurred: {str(e)}", 500
 
 
-    @app.route("/register-patient", methods=["POST"])
+    @app.route("/register-patient", methods=["GET", "POST"])
     def register_patient():
-        try:
-            # Extract data from form
-            name = request.form.get("name")
-            mykad = request.form.get("mykad")
-            gender = request.form.get("gender")
-            ethnicity = request.form.get("ethnicity")
-            p_mobile_no = request.form.get("p_mobile_no")
-            p_email = request.form.get("p_email")
-            postcode = request.form.get("postcode")
-            state = request.form.get("state")
-            address = request.form.get("address")
-            occupation = request.form.get("occupation")
-            medical_history = request.form.getlist("medical_history")  # Handles multiple values for a form field
+        if request.method == "GET":
+            return render_template("register_patient.html")
+        elif request.method == "POST":
 
-            # Validate required fields
-            required_fields = ["name", "mykad", "gender", "ethnicity", "p_mobile_no", "p_email", "postcode", "state", "address", "occupation"]
-            missing_fields = [field for field in required_fields if not request.form.get(field)]
-            if missing_fields:
-                return jsonify({"status": "failed", "message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+            if not session.get('user_id') or "admin" not in session.get('role', []):
+                return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
 
-            # Validate medical history (optional, ensure it's a list)
-            if not isinstance(medical_history, list):
-                return jsonify({"status": "failed", "message": "Medical history must be a list"}), 400
+            try:
+                # Extract data from form
+                name = request.form.get("name")
+                mykad = request.form.get("mykad")
+                gender = request.form.get("gender")
+                ethnicity = request.form.get("ethnicity")
+                p_mobile_no = request.form.get("p_mobile_no")
+                p_email = request.form.get("p_email")
+                postcode = request.form.get("postcode")
+                state = request.form.get("state")
+                address = request.form.get("address")
+                occupation = request.form.get("occupation")
+                medical_history = request.form.getlist("medical_history")  # Handles multiple values for a form field
+                treatment_history = request.form.getlist("treatment_history")
 
-            # Create and save the patient
-            patient = Patient(
-                name=name,
-                mykad=mykad,
-                gender=gender,
-                ethnicity=ethnicity,
-                p_mobile_no=p_mobile_no,
-                p_email=p_email,
-                postcode=postcode,
-                state=state,
-                address=address,
-                occupation=occupation,
-                medical_history=json.dumps(medical_history),  # Convert list to JSON string
-            )
+                # Validate required fields
+                required_fields = ["name", "mykad", "gender", "ethnicity", "p_mobile_no", "p_email", "postcode", "state", "address", "occupation"]
+                missing_fields = [field for field in required_fields if not request.form.get(field)]
+                if missing_fields:
+                    return jsonify({"status": "failed", "message": f"Missing fields: {', '.join(missing_fields)}"}), 400
 
-            db.session.add(patient)
-            db.session.commit()
+                # Validate medical history (optional, ensure it's a list)
+                if not isinstance(medical_history, list):
+                    return jsonify({"status": "failed", "message": "Medical history must be a list"}), 400
 
-            return jsonify({"status": "success", "message": "Patient registered successfully"}), 201
+                if not isinstance(treatment_history, list):
+                    return jsonify({"status": "failed", "message": "Treatment history must be a list"}), 400
 
-        except Exception as e:
-            return jsonify({"status": "failed", "message": str(e)}), 500
+                # Create and save the patient
+                patient = Patient(
+                    name=name,
+                    mykad=mykad,
+                    gender=gender,
+                    ethnicity=ethnicity,
+                    p_mobile_no=p_mobile_no,
+                    p_email=p_email,
+                    postcode=postcode,
+                    state=state,
+                    address=address,
+                    occupation=occupation,
+                    medical_history=json.dumps(medical_history),  # Convert list to JSON string
+                    treatment_history=json.dumps(treatment_history),  # Convert list to JSON string
+                )
+
+                db.session.add(patient)
+                db.session.commit()
+
+                return jsonify({"status": "success", "message": "Patient registered successfully"}), 201
+
+            except Exception as e:
+                return jsonify({"status": "failed", "message": str(e)}), 500
 
     @app.route("/export-patients", methods=["GET"])
     def export_patients():
         try:
+
+            if not session.get('user_id'):
+                return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
+
             # Retrieve all patients from the database
             patients = Patient.query.all()
 
             # Create a list of patient dictionaries
-            patient_list = [
-                {
-                    "id": patient.pid,
-                    "name": patient.name,
-                    "mykad": patient.mykad,
-                    "gender": patient.gender,
-                    "ethnicity": patient.ethnicity,
-                    "p_mobile_no": patient.p_mobile_no,
-                    "p_email": patient.p_email,
-                    "postcode": patient.postcode,
-                    "state": patient.state,
-                    "address": patient.address,
-                    "occupation": patient.occupation,
-                    "medical_history": json.loads(patient.medical_history) if patient.medical_history else [],  # Convert JSON string to list
-                    "treatment_history": json.loads(patient.treatment_history) if patient.treatment_history else [],  # Convert JSON string to list
-                }
-                for patient in patients
-            ]
+            patient_list = []
+            for patient in patients:
+                try:
+                    # Safely parse JSON fields
+                    medical_history = json.loads(patient.medical_history) if patient.medical_history else []
+                    treatment_history = json.loads(patient.treatment_history) if patient.treatment_history else []
+                except json.JSONDecodeError:
+                    # Log or handle invalid JSON data
+                    medical_history = []
+                    treatment_history = []
+
+                # Append the patient dictionary
+                patient_list.append(
+                    {
+                        "id": patient.pid,
+                        "name": patient.name,
+                        "mykad": patient.mykad,
+                        "gender": patient.gender,
+                        "ethnicity": patient.ethnicity,
+                        "p_mobile_no": patient.p_mobile_no,
+                        "p_email": patient.p_email,
+                        "postcode": patient.postcode,
+                        "state": patient.state,
+                        "address": patient.address,
+                        "occupation": patient.occupation,
+                        "medical_history": medical_history,
+                        "treatment_history": treatment_history,
+                    }
+                )
 
             # Create a JSON response
             response = Response(
@@ -235,6 +265,9 @@ def register_routes(app, db, bcrypt):
     @app.route('/submit-treatment', methods=['POST'])
     def submit_treatment():
         try:
+            
+            if not session.get('user_id') or "therapists" not in session.get('role', []):
+                return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
             # Parse data from the request
             data = request.get_json()
 
@@ -297,6 +330,10 @@ def register_routes(app, db, bcrypt):
     @app.route("/export-patient-record", methods=["POST"])
     def export_patient_records():
         try:
+
+            if not session.get('user_id'):
+                return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
+
             # Get patient ID from form data
             patient_id = request.form.get("patient_id")
 
@@ -357,6 +394,10 @@ def register_routes(app, db, bcrypt):
     @app.route("/export-patient-record-visit", methods=["POST"])
     def export_patient_record_visit():
         try:
+
+            if not session.get('user_id'):
+                return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
+
             # Get patient ID and frequency from form data
             patient_id = request.form.get("patient_id")
             record_id = request.form.get("record_id")
@@ -414,6 +455,10 @@ def register_routes(app, db, bcrypt):
     @app.route("/export-patient-simplify", methods=["POST"])
     def export_patient_simplify():
         try:
+
+            if not session.get('user_id'):
+                return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
+
             # Get patient ID from form data
             patient_id = request.form.get("patient_id")
 
@@ -486,7 +531,7 @@ def register_routes(app, db, bcrypt):
             address="123 Patient Street",
             occupation="Engineer",
             medical_history="Diabetes, Hypertension",
-            treatment_history="Acupuncture therapy in 2022"
+            treatment_history="Acupuncture therapy in 2022, Insanity at age 12"
         )
 
         record1 = PatientRecord(

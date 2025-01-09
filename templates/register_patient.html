@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Register Patient{% endblock %}
+
+{% block content %}
+<h1>Register a New Patient</h1>
+<form action="/register-patient" method="POST">
+    <label for="name">Name:</label><br>
+    <input type="text" id="name" name="name" required><br><br>
+
+    <label for="mykad">MyKad:</label><br>
+    <input type="text" id="mykad" name="mykad" required><br><br>
+
+    <label for="gender">Gender:</label><br>
+    <select id="gender" name="gender" required>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+    </select><br><br>
+
+    <label for="ethnicity">Ethnicity:</label><br>
+    <input type="text" id="ethnicity" name="ethnicity" required><br><br>
+
+    <label for="p_mobile_no">Mobile Number:</label><br>
+    <input type="text" id="p_mobile_no" name="p_mobile_no" required><br><br>
+
+    <label for="p_email">Email:</label><br>
+    <input type="email" id="p_email" name="p_email" required><br><br>
+
+    <label for="postcode">Postcode:</label><br>
+    <input type="text" id="postcode" name="postcode" required><br><br>
+
+    <label for="state">State:</label><br>
+    <input type="text" id="state" name="state" required><br><br>
+
+    <label for="address">Address:</label><br>
+    <textarea id="address" name="address" rows="4" required></textarea><br><br>
+
+    <label for="occupation">Occupation:</label><br>
+    <input type="text" id="occupation" name="occupation" required><br><br>
+
+    <label for="medical_history">Medical History (Comma-separated):</label><br>
+    <input type="text" id="medical_history" name="medical_history" placeholder="E.g., Hypertension, Diabetes"><br><br>
+
+    <label for="treatment_history">Treatment History (Comma-separated):</label><br>
+    <input type="text" id="treatment_history" name="treatment_history" placeholder="E.g., Acupuncture, Physiotherapy"><br><br>
+
+    <button type="submit">Register Patient</button>
+</form>
+{% endblock %}
