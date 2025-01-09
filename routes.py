@@ -1,4 +1,5 @@
-from flask import render_template, request, redirect, url_for, jsonify, Response
+
+from flask import render_template, request, redirect, url_for, jsonify, Response, session
 from flask_login import login_user, logout_user, current_user, login_required
 import json, os
 from datetime import datetime
@@ -13,7 +14,6 @@ def get_domain_url():
 
 
 domain_url = get_domain_url()
-
 
 def register_routes(app, db, bcrypt):
     @app.route("/")
@@ -79,6 +79,11 @@ def register_routes(app, db, bcrypt):
                 }
                 roles_as_list = role_mapping.get(user.role, [])
 
+                # Create session variables
+                session['username'] = user.username
+                session['user_id'] = user.uid
+                session['role'] = user.role
+
                 user_data = {
                     "status": "success",
                     "user": {
@@ -98,11 +103,14 @@ def register_routes(app, db, bcrypt):
     @app.route("/logout")
     def logout():
         logout_user()
+        session.clear()  # Clear all session variables
         return redirect(url_for("index"))
 
     @app.route("/secret")
-    @login_required
     def secret():
+        # Check session variables
+        if not session.get('user_id') or session.get('role') != "admin":
+            return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
         return "My secret message"
 
     @app.route("/export-users", methods=["GET"])
