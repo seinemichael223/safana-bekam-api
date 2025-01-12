@@ -487,6 +487,76 @@ def register_routes(app, db, bcrypt):
         except Exception as e:
             return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
 
+    @app.route('/delete-record', methods=['POST'])
+    def delete_record():
+        try:
+            # Check if the user is authorized
+            # if not session.get('user_id'):
+            #     return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
+
+            # Parse the record_id from FormData
+            record_id = request.form.get('record_id')
+
+            if not record_id:
+                return jsonify({"status": "failed", "message": "Missing record_id"}), 400
+
+            # Fetch the PatientRecord
+            patient_record = PatientRecord.query.get(record_id)
+            if not patient_record:
+                return jsonify({"status": "failed", "message": "Record not found"}), 404
+
+            # Delete associated AcupuncturePoint records
+            AcupuncturePoint.query.filter_by(record_id=record_id).delete()
+
+            # Delete the PatientRecord
+            db.session.delete(patient_record)
+
+            # Commit the changes
+            db.session.commit()
+
+            return jsonify({"status": "success", "message": "Record and associated points deleted successfully"}), 200
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"status": "failed", "message": str(e)}), 500
+
+    @app.route('/delete-patient', methods=['POST'])
+    def delete_patient():
+        try:
+            # Check if the user is authorized
+            # if not session.get('user_id'):
+            #     return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
+
+            # Parse the patient_id from FormData
+            patient_id = request.form.get('patient_id')
+
+            if not patient_id:
+                return jsonify({"status": "failed", "message": "Missing patient_id"}), 400
+
+            # Fetch the patient
+            patient = Patient.query.get(patient_id)
+            if not patient:
+                return jsonify({"status": "failed", "message": "Patient not found"}), 404
+
+            # Delete all associated patient records
+            patient_records = PatientRecord.query.filter_by(patient_id=patient_id).all()
+            for record in patient_records:
+                # Delete associated acupuncture points for each record
+                AcupuncturePoint.query.filter_by(record_id=record.record_id).delete()
+                db.session.delete(record)
+
+            # Delete the patient
+            db.session.delete(patient)
+
+            # Commit the changes
+            db.session.commit()
+
+            return jsonify({"status": "success", "message": "Patient and all associated records deleted successfully"}), 200
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"status": "failed", "message": str(e)}), 500
+
     @app.route("/insert-data", methods=["GET"])
     def insert_data():
         hashed_password_1= bcrypt.generate_password_hash("rehsoz")
