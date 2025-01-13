@@ -150,6 +150,7 @@ def register_routes(app, db, bcrypt):
             return f"An error occurred: {str(e)}", 500
 
 
+    # Register a Patient
     @app.route("/register-patient", methods=["GET", "POST"])
     def register_patient():
         if request.method == "GET":
@@ -211,57 +212,97 @@ def register_routes(app, db, bcrypt):
             except Exception as e:
                 return jsonify({"status": "failed", "message": str(e)}), 500
 
-    @app.route("/export-patients", methods=["GET"])
+    # Export the information of ALL patients or 1 specific Patient
+    @app.route("/export-patients", methods=["POST"])
     def export_patients():
         try:
+            # if not session.get('user_id'):
+            #     return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
 
-            if not session.get('user_id'):
-                return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
+            # Parse the patient ID from the FormData
+            patient_id = request.form.get('patient_id')
 
-            # Retrieve all patients from the database
-            patients = Patient.query.all()
+            if patient_id:
+                # Retrieve the specific patient by ID
+                patient = Patient.query.get(patient_id)
 
-            # Create a list of patient dictionaries
-            patient_list = []
-            for patient in patients:
+                if not patient:
+                    return jsonify({"status": "failed", "message": "Patient not found"}), 404
+
                 try:
                     # Safely parse JSON fields
                     medical_history = json.loads(patient.medical_history) if patient.medical_history else []
                     treatment_history = json.loads(patient.treatment_history) if patient.treatment_history else []
                 except json.JSONDecodeError:
-                    # Log or handle invalid JSON data
                     medical_history = []
                     treatment_history = []
 
-                # Append the patient dictionary
-                patient_list.append(
-                    {
-                        "id": patient.pid,
-                        "name": patient.name,
-                        "mykad": patient.mykad,
-                        "gender": patient.gender,
-                        "ethnicity": patient.ethnicity,
-                        "p_mobile_no": patient.p_mobile_no,
-                        "p_email": patient.p_email,
-                        "postcode": patient.postcode,
-                        "state": patient.state,
-                        "address": patient.address,
-                        "occupation": patient.occupation,
-                        "medical_history": medical_history,
-                        "treatment_history": treatment_history,
-                    }
+                # Return the specific patient's information
+                patient_data = {
+                    "id": patient.pid,
+                    "name": patient.name,
+                    "mykad": patient.mykad,
+                    "gender": patient.gender,
+                    "ethnicity": patient.ethnicity,
+                    "p_mobile_no": patient.p_mobile_no,
+                    "p_email": patient.p_email,
+                    "postcode": patient.postcode,
+                    "state": patient.state,
+                    "address": patient.address,
+                    "occupation": patient.occupation,
+                    "medical_history": medical_history,
+                    "treatment_history": treatment_history,
+                }
+                return Response(
+                    json.dumps(patient_data, ensure_ascii=False, indent=4),
+                    mimetype="application/json",
                 )
 
-            # Create a JSON response
-            response = Response(
-                json.dumps(patient_list, ensure_ascii=False, indent=4),
-                mimetype="application/json",
-            )
-            return response
+            else:
+                # Retrieve all patients from the database
+                patients = Patient.query.all()
+
+                # Create a list of patient dictionaries
+                patient_list = []
+                for patient in patients:
+                    try:
+                        # Safely parse JSON fields
+                        medical_history = json.loads(patient.medical_history) if patient.medical_history else []
+                        treatment_history = json.loads(patient.treatment_history) if patient.treatment_history else []
+                    except json.JSONDecodeError:
+                        medical_history = []
+                        treatment_history = []
+
+                    # Append the patient dictionary
+                    patient_list.append(
+                        {
+                            "id": patient.pid,
+                            "name": patient.name,
+                            "mykad": patient.mykad,
+                            "gender": patient.gender,
+                            "ethnicity": patient.ethnicity,
+                            "p_mobile_no": patient.p_mobile_no,
+                            "p_email": patient.p_email,
+                            "postcode": patient.postcode,
+                            "state": patient.state,
+                            "address": patient.address,
+                            "occupation": patient.occupation,
+                            "medical_history": medical_history,
+                            "treatment_history": treatment_history,
+                        }
+                    )
+
+                # Create a JSON response
+                response = Response(
+                    json.dumps(patient_list, ensure_ascii=False, indent=4),
+                    mimetype="application/json",
+                )
+                return response
 
         except Exception as e:
             return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
 
+    # Submit Treatment Record for a Patient
     @app.route('/submit-treatment', methods=['POST'])
     def submit_treatment():
         try:
@@ -327,6 +368,7 @@ def register_routes(app, db, bcrypt):
 
 
 
+    # Export ALL of a specific patient's record
     @app.route("/export-patient-record", methods=["POST"])
     def export_patient_records():
         try:
@@ -391,6 +433,7 @@ def register_routes(app, db, bcrypt):
         except Exception as e:
             return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
 
+    # Export a specific patient's specific record
     @app.route("/export-patient-record-visit", methods=["POST"])
     def export_patient_record_visit():
         try:
@@ -452,6 +495,7 @@ def register_routes(app, db, bcrypt):
         except Exception as e:
             return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
 
+    # Exports ALL of a Specific Patient's Record but simplified to ID, frequency, Created Date and Package
     @app.route("/export-patient-simplify", methods=["POST"])
     def export_patient_simplify():
         try:
@@ -487,6 +531,7 @@ def register_routes(app, db, bcrypt):
         except Exception as e:
             return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
 
+    # Delete Specific Record
     @app.route('/delete-record', methods=['POST'])
     def delete_record():
         try:
@@ -520,6 +565,7 @@ def register_routes(app, db, bcrypt):
             db.session.rollback()
             return jsonify({"status": "failed", "message": str(e)}), 500
 
+    # Delete Specific Patient
     @app.route('/delete-patient', methods=['POST'])
     def delete_patient():
         try:
