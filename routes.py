@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 import json, os
 from datetime import datetime
 
-from models import User, Patient, PatientRecord, AcupuncturePoint
+from models import User, Patient, PatientRecord, AcupuncturePoint, MedicalHistory
 def get_domain_url():
     try:
         with open("secret.txt", "r") as file:
@@ -157,36 +157,42 @@ def register_routes(app, db, bcrypt):
             return render_template("register_patient.html")
         elif request.method == "POST":
 
-            if not session.get('user_id') or "admin" not in session.get('role', []):
-                return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
+            # if not session.get('user_id') or "admin" not in session.get('role', []):
+            #     return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
 
             try:
-                # Extract data from form
-                name = request.form.get("name")
-                mykad = request.form.get("mykad")
-                gender = request.form.get("gender")
-                ethnicity = request.form.get("ethnicity")
-                p_mobile_no = request.form.get("p_mobile_no")
-                p_email = request.form.get("p_email")
-                postcode = request.form.get("postcode")
-                state = request.form.get("state")
-                address = request.form.get("address")
-                occupation = request.form.get("occupation")
-                medical_history = request.form.getlist("medical_history")  # Handles multiple values for a form field
-                treatment_history = request.form.getlist("treatment_history")
+                # Parse JSON data from the request
+                data = request.get_json()
+
+                # Extract data using data.get
+                name = data.get("name")
+                mykad = data.get("mykad")
+                gender = data.get("gender")
+                ethnicity = data.get("ethnicity")
+                p_mobile_no = data.get("p_mobile_no")
+                p_email = data.get("p_email")
+                postcode = data.get("postcode")
+                state = data.get("state")
+                address = data.get("address")
+                occupation = data.get("occupation")
+                medical_history = data.get("medical_history", [])  # Default to an empty list if not provided
 
                 # Validate required fields
                 required_fields = ["name", "mykad", "gender", "ethnicity", "p_mobile_no", "p_email", "postcode", "state", "address", "occupation"]
-                missing_fields = [field for field in required_fields if not request.form.get(field)]
+                missing_fields = [field for field in required_fields if not data.get(field)]
                 if missing_fields:
                     return jsonify({"status": "failed", "message": f"Missing fields: {', '.join(missing_fields)}"}), 400
 
-                # Validate medical history (optional, ensure it's a list)
-                if not isinstance(medical_history, list):
-                    return jsonify({"status": "failed", "message": "Medical history must be a list"}), 400
+                # Validate medical history
+                medical_history_list = []
+                for history in medical_history:
+                    condition = history.get("condition")
+                    medicine = history.get("medicine")
 
-                if not isinstance(treatment_history, list):
-                    return jsonify({"status": "failed", "message": "Treatment history must be a list"}), 400
+                    if not all([condition, medicine]):
+                        return jsonify({"status": "failed", "message": "Each medical history entry must include 'condition' and 'medicine'"}), 400
+
+                    medical_history_list.append(MedicalHistory(condition=condition, medicine=medicine))
 
                 # Create and save the patient
                 patient = Patient(
@@ -199,10 +205,11 @@ def register_routes(app, db, bcrypt):
                     postcode=postcode,
                     state=state,
                     address=address,
-                    occupation=occupation,
-                    medical_history=json.dumps(medical_history),  # Convert list to JSON string
-                    treatment_history=json.dumps(treatment_history),  # Convert list to JSON string
+                    occupation=occupation
                 )
+
+                # Add medical history entries to the patient
+                patient.medical_histories.extend(medical_history_list)
 
                 db.session.add(patient)
                 db.session.commit()
@@ -210,6 +217,7 @@ def register_routes(app, db, bcrypt):
                 return jsonify({"status": "success", "message": "Patient registered successfully"}), 201
 
             except Exception as e:
+                db.session.rollback()  # Rollback transaction in case of an error
                 return jsonify({"status": "failed", "message": str(e)}), 500
 
     # Export the information of ALL patients or 1 specific Patient

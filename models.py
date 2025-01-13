@@ -32,11 +32,26 @@ class Patient(db.Model):
     state = db.Column(db.String(30), nullable=False)
     address = db.Column(db.String(250), nullable=False)
     occupation = db.Column(db.String(80), nullable=False)
-    medical_history = db.Column(db.String(500), nullable=True)
-    treatment_history = db.Column(db.String(500), nullable=True)
+
+    # Relationship with MedicalHistory
+    medical_histories = db.relationship('MedicalHistory', backref='patient', cascade="all, delete-orphan", lazy=True)
 
     def get_id(self):
         return self.pid
+
+
+class MedicalHistory(db.Model):
+    __tablename__ = "medical_history"  # Table for medical history
+
+    id = db.Column(db.Integer, primary_key=True)
+    condition = db.Column(db.String(100), nullable=False)
+    medicine = db.Column(db.String(100), nullable=False)
+
+    # Foreign key to link with the Patient
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.pid'), nullable=False)
+
+    def get_id(self):
+        return self.id
 
 class PatientRecord(db.Model):
     __tablename__ = "patient_records"  # Table for patient records
