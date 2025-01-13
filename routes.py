@@ -608,6 +608,74 @@ def register_routes(app, db, bcrypt):
             db.session.rollback()
             return jsonify({"status": "failed", "message": str(e)}), 500
 
+    # Update a specific patient's record with the matching ID
+    @app.route("/update-patient", methods=["POST"])
+    def update_patient():
+        try:
+            # Parse the JSON data from the request body
+            data = request.get_json()
+            if not data:
+                return jsonify({"status": "failed", "message": "Invalid or missing JSON data"}), 400
+
+            # Extract patient ID from the JSON payload
+            patient_id = data.get("patient_id")
+            if not patient_id:
+                return jsonify({"status": "failed", "message": "Patient ID is required"}), 400
+
+            # Retrieve the patient record by ID
+            patient = Patient.query.get(patient_id)
+            if not patient:
+                return jsonify({"status": "failed", "message": "Patient not found"}), 404
+
+            # Update patient details if provided
+            patient.name = data.get("name", patient.name)
+            patient.mykad = data.get("mykad", patient.mykad)
+            patient.gender = data.get("gender", patient.gender)
+            patient.ethnicity = data.get("ethnicity", patient.ethnicity)
+            patient.p_mobile_no = data.get("p_mobile_no", patient.p_mobile_no)
+            patient.p_email = data.get("p_email", patient.p_email)
+            patient.postcode = data.get("postcode", patient.postcode)
+            patient.state = data.get("state", patient.state)
+            patient.address = data.get("address", patient.address)
+            patient.occupation = data.get("occupation", patient.occupation)
+
+            # Update medical history
+            updated_medical_history = data.get("medical_history", [])
+            if updated_medical_history:
+                # Convert list of medical history dictionaries to a set of tuples for comparison
+                updated_history_set = {(entry["condition"], entry["medicine"]) for entry in updated_medical_history}
+
+                # Query the current medical history records for this patient
+                current_history = MedicalHistory.query.filter_by(patient_id=patient_id).all()
+                current_history_set = {(mh.condition, mh.medicine) for mh in current_history}
+
+                # Determine new entries to add and existing entries to delete
+                new_entries = updated_history_set - current_history_set
+                to_delete = current_history_set - updated_history_set
+
+                # Delete outdated medical history entries
+                for mh in current_history:
+                    if (mh.condition, mh.medicine) in to_delete:
+                        db.session.delete(mh)
+
+                # Add new medical history entries
+                for condition, medicine in new_entries:
+                    new_mh = MedicalHistory(
+                        condition=condition,
+                        medicine=medicine,
+                        patient_id=patient_id
+                    )
+                    db.session.add(new_mh)
+
+            # Commit all changes to the database
+            db.session.commit()
+
+            return jsonify({"status": "success", "message": "Patient and medical history updated successfully"}), 200
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
+
     @app.route("/insert-data", methods=["GET"])
     def insert_data():
         hashed_password_1= bcrypt.generate_password_hash("rehsoz")
@@ -650,9 +718,32 @@ def register_routes(app, db, bcrypt):
             postcode="12345",
             state="Selangor",
             address="123 Patient Street",
-            occupation="Engineer",
-            medical_history="Diabetes, Hypertension",
-            treatment_history="Acupuncture therapy in 2022, Insanity at age 12"
+            occupation="Engineer"
+        )
+
+        patient2 = Patient(
+            name="Jane Doe",
+            mykad="123456789021",
+            gender="Female",
+            ethnicity="Thiren",
+            p_mobile_no="1234567891",
+            p_email="janedoe@example.com",
+            postcode="54321",
+            state="Johor",
+            address="456 Chocolate Street",
+            occupation="Unknown"
+        )
+
+        history1 = MedicalHistory(
+            patient_id="1",
+            condition="Insanity",
+            medicine="Cold Beer"
+        )
+
+        history2 = MedicalHistory(
+            patient_id="1",
+            condition="Paper Boats",
+            medicine="Play Transistor"
         )
 
         record1 = PatientRecord(
@@ -704,10 +795,10 @@ def register_routes(app, db, bcrypt):
             blood_quantity=5,
             record_id=2  # Assuming this matches the patient record primary key
         )
-        db.session.add_all([user1, user2, user3, patient1])
+        db.session.add_all([user1, user2, user3, patient1, patient2])
         db.session.commit()
 
-        db.session.add_all([record1, record2])
+        db.session.add_all([record1, record2, history1, history2])
         db.session.commit()
 
         db.session.add_all([point1, point2, point3])
