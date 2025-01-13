@@ -221,12 +221,9 @@ def register_routes(app, db, bcrypt):
                 return jsonify({"status": "failed", "message": str(e)}), 500
 
     # Export the information of ALL patients or 1 specific Patient
-    @app.route("/export-patients", methods=["POST"])
+    @app.route("/export-patients", methods=["GET", "POST"])
     def export_patients():
         try:
-            # if not session.get('user_id'):
-            #     return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
-
             # Parse the patient ID from the FormData
             patient_id = request.form.get('patient_id')
 
@@ -237,13 +234,14 @@ def register_routes(app, db, bcrypt):
                 if not patient:
                     return jsonify({"status": "failed", "message": "Patient not found"}), 404
 
-                try:
-                    # Safely parse JSON fields
-                    medical_history = json.loads(patient.medical_history) if patient.medical_history else []
-                    treatment_history = json.loads(patient.treatment_history) if patient.treatment_history else []
-                except json.JSONDecodeError:
-                    medical_history = []
-                    treatment_history = []
+                # Retrieve the patient's medical history
+                medical_history = [
+                    {
+                        "id": history.id,
+                        "condition": history.condition,
+                        "medicine": history.medicine
+                    } for history in patient.medical_histories
+                ]
 
                 # Return the specific patient's information
                 patient_data = {
@@ -259,7 +257,6 @@ def register_routes(app, db, bcrypt):
                     "address": patient.address,
                     "occupation": patient.occupation,
                     "medical_history": medical_history,
-                    "treatment_history": treatment_history,
                 }
                 return Response(
                     json.dumps(patient_data, ensure_ascii=False, indent=4),
@@ -273,13 +270,14 @@ def register_routes(app, db, bcrypt):
                 # Create a list of patient dictionaries
                 patient_list = []
                 for patient in patients:
-                    try:
-                        # Safely parse JSON fields
-                        medical_history = json.loads(patient.medical_history) if patient.medical_history else []
-                        treatment_history = json.loads(patient.treatment_history) if patient.treatment_history else []
-                    except json.JSONDecodeError:
-                        medical_history = []
-                        treatment_history = []
+                    # Retrieve each patient's medical history
+                    medical_history = [
+                        {
+                            "id": history.id,
+                            "condition": history.condition,
+                            "medicine": history.medicine
+                        } for history in patient.medical_histories
+                    ]
 
                     # Append the patient dictionary
                     patient_list.append(
@@ -296,7 +294,6 @@ def register_routes(app, db, bcrypt):
                             "address": patient.address,
                             "occupation": patient.occupation,
                             "medical_history": medical_history,
-                            "treatment_history": treatment_history,
                         }
                     )
 
