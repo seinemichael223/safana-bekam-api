@@ -642,30 +642,35 @@ def register_routes(app, db, bcrypt):
             # Update medical history
             updated_medical_history = data.get("medical_history", [])
             if updated_medical_history:
-                # Convert list of medical history dictionaries to a set of tuples for comparison
-                updated_history_set = {(entry["condition"], entry["medicine"]) for entry in updated_medical_history}
+                # Convert the updated medical history to a dictionary for easy lookup
+                updated_history_dict = {entry["condition"]: entry["medicine"] for entry in updated_medical_history}
 
                 # Query the current medical history records for this patient
                 current_history = MedicalHistory.query.filter_by(patient_id=patient_id).all()
-                current_history_set = {(mh.condition, mh.medicine) for mh in current_history}
 
-                # Determine new entries to add and existing entries to delete
-                new_entries = updated_history_set - current_history_set
-                to_delete = current_history_set - updated_history_set
+                # Track conditions to keep
+                conditions_to_keep = set(updated_history_dict.keys())
 
-                # Delete outdated medical history entries
+                # Update existing records or delete outdated ones
                 for mh in current_history:
-                    if (mh.condition, mh.medicine) in to_delete:
+                    if mh.condition in updated_history_dict:
+                        # Update the medicine if the condition exists but the medicine is different
+                        if mh.medicine != updated_history_dict[mh.condition]:
+                            mh.medicine = updated_history_dict[mh.condition]
+                    else:
+                        # Delete medical history entries not in the updated list
                         db.session.delete(mh)
 
                 # Add new medical history entries
-                for condition, medicine in new_entries:
-                    new_mh = MedicalHistory(
-                        condition=condition,
-                        medicine=medicine,
-                        patient_id=patient_id
-                    )
-                    db.session.add(new_mh)
+                existing_conditions = {mh.condition for mh in current_history}
+                for condition, medicine in updated_history_dict.items():
+                    if condition not in existing_conditions:
+                        new_mh = MedicalHistory(
+                            condition=condition,
+                            medicine=medicine,
+                            patient_id=patient_id
+                        )
+                        db.session.add(new_mh)
 
             # Commit all changes to the database
             db.session.commit()
