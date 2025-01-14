@@ -805,3 +805,5 @@ def register_routes(app, db, bcrypt):
         db.session.commit()
         return redirect(url_for("index"))
 
+
+# Testing Cuz Git is having issues
