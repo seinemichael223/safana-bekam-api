@@ -73,8 +73,8 @@ def register_routes(app, db, bcrypt):
                 # Convert role string into a list
                 role_mapping = {
                     "admin": ["admin"],
-                    "therapist": ["therapist"],
-                    "both": ["admin", "therapist"],
+                    "therapists": ["therapists"],
+                    "both": ["admin", "therapists"],
                 }
                 roles_as_list = role_mapping.get(user.role, [])
 
