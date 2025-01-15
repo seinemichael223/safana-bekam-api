@@ -158,9 +158,6 @@ def register_routes(app, db, bcrypt):
             return render_template("register_patient.html")
         elif request.method == "POST":
 
-            # if not session.get('user_id') or "admin" not in session.get('role', []):
-            #     return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
-
             try:
                 # Parse JSON data from the request
                 data = request.get_json()
@@ -176,14 +173,18 @@ def register_routes(app, db, bcrypt):
                 state = data.get("state")
                 address = data.get("address")
                 occupation = data.get("occupation")
-                created_date = data.get("created_date")
+                created_date = data.get("created_date")  # Optional field
                 medical_history = data.get("medical_history", [])  # Default to an empty list if not provided
 
                 # Validate required fields
-                required_fields = ["name", "mykad", "gender", "ethnicity", "p_mobile_no", "p_email", "postcode", "state", "address", "occupation", "created_date"]
+                required_fields = ["name", "mykad", "gender", "ethnicity", "p_mobile_no", "p_email", "postcode", "state", "address", "occupation"]
                 missing_fields = [field for field in required_fields if not data.get(field)]
                 if missing_fields:
                     return jsonify({"status": "failed", "message": f"Missing fields: {', '.join(missing_fields)}"}), 400
+
+                # Generate a created_date if not provided
+                if not created_date:
+                    created_date = datetime.now().strftime('%Y-%m-%d')
 
                 # Validate medical history
                 medical_history_list = []
