@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, jsonify, Response, session
 from flask_login import login_user, logout_user, current_user, login_required
 import json, os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from models import User, Patient, PatientRecord, AcupuncturePoint, MedicalHistory
 def get_domain_url():
@@ -176,10 +176,11 @@ def register_routes(app, db, bcrypt):
                 state = data.get("state")
                 address = data.get("address")
                 occupation = data.get("occupation")
+                created_date = data.get("created_date")
                 medical_history = data.get("medical_history", [])  # Default to an empty list if not provided
 
                 # Validate required fields
-                required_fields = ["name", "mykad", "gender", "ethnicity", "p_mobile_no", "p_email", "postcode", "state", "address", "occupation"]
+                required_fields = ["name", "mykad", "gender", "ethnicity", "p_mobile_no", "p_email", "postcode", "state", "address", "occupation", "created_date"]
                 missing_fields = [field for field in required_fields if not data.get(field)]
                 if missing_fields:
                     return jsonify({"status": "failed", "message": f"Missing fields: {', '.join(missing_fields)}"}), 400
@@ -206,7 +207,8 @@ def register_routes(app, db, bcrypt):
                     postcode=postcode,
                     state=state,
                     address=address,
-                    occupation=occupation
+                    occupation=occupation,
+                    date=datetime.strptime(created_date, '%Y-%m-%d')
                 )
 
                 # Add medical history entries to the patient
@@ -257,6 +259,7 @@ def register_routes(app, db, bcrypt):
                     "state": patient.state,
                     "address": patient.address,
                     "occupation": patient.occupation,
+                    "created_date": patient.date.strftime("%d/%m/%Y"),
                     "medical_history": medical_history,
                 }
                 return Response(
@@ -294,6 +297,7 @@ def register_routes(app, db, bcrypt):
                             "state": patient.state,
                             "address": patient.address,
                             "occupation": patient.occupation,
+                            "created_date": patient.date.strftime("%d/%m/%Y"),
                             "medical_history": medical_history,
                         }
                     )
@@ -422,7 +426,7 @@ def register_routes(app, db, bcrypt):
                     "id": record.record_id,
                     "patient_id": record.patient_id,
                     "therapist_id": record.therapist_id,
-                    "created_data": record.date.strftime("%d/%m/%Y"),
+                    "created_date": record.date.strftime("%d/%m/%Y"),
                     "frequency": record.frequency,
                     "blood_pressure_before": record.blood_pressure_before,
                     "blood_pressure_after": record.blood_pressure_after,
@@ -484,7 +488,7 @@ def register_routes(app, db, bcrypt):
                 "id": record.record_id,
                 "patient_id": record.patient_id,
                 "therapist_id": record.therapist_id,
-                "created_data": record.date.strftime("%d/%m/%Y"),
+                "created_date": record.date.strftime("%d/%m/%Y"),
                 "frequency": record.frequency,
                 "blood_pressure_before": record.blood_pressure_before,
                 "blood_pressure_after": record.blood_pressure_after,
@@ -722,7 +726,8 @@ def register_routes(app, db, bcrypt):
             postcode="12345",
             state="Selangor",
             address="123 Patient Street",
-            occupation="Engineer"
+            occupation="Engineer",
+            date=datetime.now()
         )
 
         patient2 = Patient(
@@ -735,7 +740,8 @@ def register_routes(app, db, bcrypt):
             postcode="54321",
             state="Johor",
             address="456 Chocolate Street",
-            occupation="Unknown"
+            occupation="Unknown",
+            date=datetime.now()
         )
 
         history1 = MedicalHistory(
@@ -932,3 +938,88 @@ def register_routes(app, db, bcrypt):
         except Exception as e:
             db.session.rollback()
             return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
+
+    @app.route('/check-patients-monthly', methods=['GET'])
+    def check_patient_monthly():
+        try:
+            # Calculate the date 30 days ago
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+
+            # Query the database for patients registered in the past 30 days
+            recent_patients_count = Patient.query.filter(Patient.date >= thirty_days_ago).count()
+
+            # Return the count as JSON response
+            return jsonify({
+                "status": "success",
+                "count": recent_patients_count
+            }), 200
+
+        except Exception as e:
+            # Handle any errors
+            return jsonify({
+                "status": "failed",
+                "message": f"An error occurred: {str(e)}"
+            }), 500
+
+    @app.route('/check-patients-daily', methods=['GET'])
+    def check_patients_daily():
+        try:
+            # Calculate the date 24 hours ago
+            twenty_four_hours_ago = datetime.now() - timedelta(hours=24)
+
+            # Query the database for patients registered in the past 24 hours
+            recent_count = Patient.query.filter(Patient.date >= twenty_four_hours_ago).count()
+
+            # Return the count as JSON response
+            return jsonify({
+                "status": "success",
+                "count": recent_count
+            }), 200
+
+        except Exception as e:
+            # Handle any errors
+            return jsonify({
+                "status": "failed",
+                "message": f"An error occurred: {str(e)}"
+            }), 500
+
+    @app.route('/total-patients', methods=['GET'])
+    def total_patients():
+        try:
+            # Query the total number of patients in the database
+            total_count = Patient.query.count()
+
+            # Return the count as JSON response
+            return jsonify({
+                "status": "success",
+                "count": total_count
+            }), 200
+
+        except Exception as e:
+            # Handle any errors
+            return jsonify({
+                "status": "failed",
+                "message": f"An error occurred: {str(e)}"
+            }), 500
+
+    @app.route('/treatment-records-daily', methods=['GET'])
+    def treatment_records_daily():
+        try:
+            # Calculate the date 24 hours ago
+            twenty_four_hours_ago = datetime.now() - timedelta(hours=24)
+
+            # Query the database for patient records created in the past 24 hours
+            recent_records_count = PatientRecord.query.filter(PatientRecord.date >= twenty_four_hours_ago).count()
+
+            # Return the count as JSON response
+            return jsonify({
+                "status": "success",
+                "count": recent_records_count
+            }), 200
+
+        except Exception as e:
+            # Handle any errors
+            return jsonify({
+                "status": "failed",
+                "message": f"An error occurred: {str(e)}"
+            }), 500

@@ -32,6 +32,7 @@ class Patient(db.Model):
     state = db.Column(db.String(30), nullable=False)
     address = db.Column(db.String(250), nullable=False)
     occupation = db.Column(db.String(80), nullable=False)
+    date = db.Column(db.DateTime, nullable=False)
 
     # Relationship with MedicalHistory
     medical_histories = db.relationship('MedicalHistory', backref='patient', cascade="all, delete-orphan", lazy=True)
