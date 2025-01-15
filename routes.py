@@ -113,6 +113,7 @@ def register_routes(app, db, bcrypt):
             return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
         return "My secret message"
 
+    # Exports ALL Users
     @app.route("/export-users", methods=["GET"])
     def export_users():
         try:
