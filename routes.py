@@ -836,7 +836,6 @@ def register_routes(app, db, bcrypt):
         db.session.commit()
         return redirect(url_for("index"))
 
-
     @app.route('/update-treatment-record', methods=['POST'])
     def update_treatment_record():
         try:
@@ -856,7 +855,7 @@ def register_routes(app, db, bcrypt):
                 return jsonify({"status": "failed", "message": "Patient record not found"}), 404
 
             # Update patient record fields if provided
-            patient_record.date = datetime.strptime(data.get('created_date', patient_record.date.strftime('%Y-%m-%d')), '%Y-%m-%d')
+            patient_record.date = datetime.strptime(data.get('created_date', datetime.now().strftime('%Y-%m-%d')), '%Y-%m-%d')
             patient_record.frequency = data.get('frequency', patient_record.frequency)
             patient_record.blood_pressure_before = data.get('blood_pressure_before', patient_record.blood_pressure_before)
             patient_record.blood_pressure_after = data.get('blood_pressure_after', patient_record.blood_pressure_after)
