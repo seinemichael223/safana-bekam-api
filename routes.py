@@ -884,3 +884,51 @@ def register_routes(app, db, bcrypt):
         except Exception as e:
             db.session.rollback()
             return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
+
+    @app.route("/update-user", methods=["POST"])
+    def update_user():
+        try:
+            # Retrieve user ID and updated details from the form
+            user_id = request.form.get("user_id")
+            email = request.form.get("email")
+            username = request.form.get("username")
+            mobile_no = request.form.get("mobile_no")
+            address = request.form.get("address")
+            roles = request.form.getlist("role")
+
+            # Validate required fields
+            if not user_id:
+                return jsonify({"status": "failed", "message": "User ID is required"}), 400
+
+            # Find the user by ID
+            user = User.query.get(user_id)
+            if not user:
+                return jsonify({"status": "failed", "message": "User not found"}), 404
+
+            # Update user particulars if provided
+            if email:
+                user.email = email
+            if username:
+                user.username = username
+            if mobile_no:
+                user.mobile_no = mobile_no
+            if address:
+                user.address = address
+
+            # Update roles if provided
+            if roles:
+                if len(roles) == 2:
+                    user.role = "both"
+                elif "admin" in roles:
+                    user.role = "admin"
+                else:
+                    user.role = "therapists"
+
+            # Commit changes to the database
+            db.session.commit()
+
+            return jsonify({"status": "success", "message": "User updated successfully"}), 200
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500

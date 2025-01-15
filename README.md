@@ -19,3 +19,5 @@ routes.py:
 "/delete-patient" = Delete a Patient from the database
 "/update-patient" = Updates an existing patient's information
 "/insert-data" = Insert Dummy Data
+"/update-treatment-record" = Updates a specific record's information
+"/update-user" = Updates User particulars
