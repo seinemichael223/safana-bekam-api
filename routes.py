@@ -372,8 +372,6 @@ def register_routes(app, db, bcrypt):
             db.session.rollback()
             return jsonify({'error': str(e)}), 500
 
-
-
     # Export ALL of a specific patient's record
     @app.route("/export-patient-record", methods=["POST"])
     def export_patient_records():
@@ -812,4 +810,77 @@ def register_routes(app, db, bcrypt):
         return redirect(url_for("index"))
 
 
-# Testing Cuz Git is having issues
+    @app.route('/update-treatment-record', methods=['POST'])
+    def update_treatment_record():
+        try:
+            # Parse data from the request
+            data = request.get_json()
+            if not data:
+                return jsonify({"status": "failed", "message": "Invalid or missing JSON data"}), 400
+
+            # Extract record ID
+            record_id = data.get('record_id')
+            if not record_id:
+                return jsonify({"status": "failed", "message": "Record ID is required"}), 400
+
+            # Retrieve the record by ID
+            patient_record = PatientRecord.query.get(record_id)
+            if not patient_record:
+                return jsonify({"status": "failed", "message": "Patient record not found"}), 404
+
+            # Update patient record fields if provided
+            patient_record.date = datetime.strptime(data.get('created_date', patient_record.date.strftime('%Y-%m-%d')), '%Y-%m-%d')
+            patient_record.frequency = data.get('frequency', patient_record.frequency)
+            patient_record.blood_pressure_before = data.get('blood_pressure_before', patient_record.blood_pressure_before)
+            patient_record.blood_pressure_after = data.get('blood_pressure_after', patient_record.blood_pressure_after)
+            patient_record.package = data.get('package', patient_record.package)
+            patient_record.health_complications = data.get('health_complications', patient_record.health_complications)
+            patient_record.comments = data.get('comments', patient_record.comments)
+
+            # Handle acupuncture points
+            updated_acupuncture_points = data.get('acupuncture_point', [])
+            if updated_acupuncture_points:
+                # Convert the updated points to a set of tuples for easy comparison
+                updated_points_set = {
+                    (point['body_part'], point['coordinate_x'], point['coordinate_y'], point['skin_reaction'], point['blood_quantity'])
+                    for point in updated_acupuncture_points
+                }
+
+                # Query existing acupuncture points
+                current_points = AcupuncturePoint.query.filter_by(record_id=record_id).all()
+                current_points_set = {
+                    (point.body_part, point.coordinate_x, point.coordinate_y, point.skin_reaction, point.blood_quantity)
+                    for point in current_points
+                }
+
+                # Determine points to add, update, or delete
+                points_to_add = updated_points_set - current_points_set
+                points_to_keep = updated_points_set & current_points_set
+                points_to_delete = current_points_set - updated_points_set
+
+                # Delete outdated points
+                for point in current_points:
+                    if (point.body_part, point.coordinate_x, point.coordinate_y, point.skin_reaction, point.blood_quantity) in points_to_delete:
+                        db.session.delete(point)
+
+                # Add new points
+                for point_data in points_to_add:
+                    body_part, coordinate_x, coordinate_y, skin_reaction, blood_quantity = point_data
+                    new_point = AcupuncturePoint(
+                        body_part=body_part,
+                        coordinate_x=coordinate_x,
+                        coordinate_y=coordinate_y,
+                        skin_reaction=skin_reaction,
+                        blood_quantity=blood_quantity,
+                        record_id=record_id
+                    )
+                    db.session.add(new_point)
+
+            # Commit all changes
+            db.session.commit()
+
+            return jsonify({"status": "success", "message": "Treatment record updated successfully"}), 200
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"status": "failed", "message": f"An error occurred: {str(e)}"}), 500
