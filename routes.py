@@ -660,6 +660,9 @@ def register_routes(app, db, bcrypt):
             patient.address = data.get("address", patient.address)
             patient.occupation = data.get("occupation", patient.occupation)
 
+            # Automatically update the date to today's date
+            patient.date = datetime.now()
+
             # Update medical history
             updated_medical_history = data.get("medical_history", [])
             if updated_medical_history:
