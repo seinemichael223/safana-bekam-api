@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 import json, os
 from datetime import datetime, timedelta
 
-from models import User, Patient, PatientRecord, AcupuncturePoint, MedicalHistory
+from models import User, Patient, PatientRecord, AcupuncturePoint, MedicalHistory, Notifications
 def get_domain_url():
     try:
         with open("secret.txt", "r") as file:
@@ -317,8 +317,8 @@ def register_routes(app, db, bcrypt):
     @app.route('/submit-treatment', methods=['POST'])
     def submit_treatment():
         try:
-            if not session.get('user_id') or "therapists" not in session.get('role', []):
-                return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
+            # if not session.get('user_id') or "therapists" not in session.get('role', []):
+            #     return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
 
             # Parse data from the request
             data = request.get_json()
@@ -345,6 +345,11 @@ def register_routes(app, db, bcrypt):
             if not created_date:
                 created_date = datetime.now().strftime('%Y-%m-%d')
 
+            # Retrieve patient details for notification
+            patient = Patient.query.get(patient_id)
+            if not patient:
+                return jsonify({'error': 'Invalid patient ID'}), 404
+
             # Create and commit the PatientRecord
             patient_record = PatientRecord(
                 date=datetime.strptime(created_date, '%Y-%m-%d'),
@@ -363,28 +368,37 @@ def register_routes(app, db, bcrypt):
             # Create and commit the AcupuncturePoint records
             if acupuncture_points:
                 for point in acupuncture_points:
-                    # Extract values from the dictionary
+                    # Unpack point details
                     body_part = point.get('body_part')
                     coordinate_x = point.get('coordinate_x')
                     coordinate_y = point.get('coordinate_y')
                     skin_reaction = point.get('skin_reaction')
                     blood_quantity = point.get('blood_quantity')
 
-                    # Validate that all required fields for an acupuncture point are present
+                    # Validate all required fields for acupuncture points
                     if not all([body_part, coordinate_x, coordinate_y, skin_reaction, blood_quantity]):
                         return jsonify({'error': 'Each acupuncture point must include body_part, coordinate_x, coordinate_y, skin_reaction, and blood_quantity'}), 400
 
                     # Add acupuncture point record
                     acupuncture_point = AcupuncturePoint(
                         body_part=body_part,
-                        coordinate_x=coordinate_x,  # Ensure coordinate_x is a float
-                        coordinate_y=coordinate_y,  # Ensure coordinate_y is a float
-                        skin_reaction=skin_reaction,  # Ensure skin_reaction is an integer
-                        blood_quantity=blood_quantity,  # Ensure blood_quantity is an integer
+                        coordinate_x=coordinate_x,
+                        coordinate_y=coordinate_y,
+                        skin_reaction=skin_reaction,
+                        blood_quantity=blood_quantity,
                         record_id=patient_record.record_id
                     )
-
                     db.session.add(acupuncture_point)
+
+            # Create a notification for the treatment submission
+            notification_message = f"New Treatment added for {patient.name} on {created_date}"
+            notification = Notifications(
+                date=datetime.strptime(created_date, '%Y-%m-%d'),
+                notif_type="treatment submission",
+                message=notification_message
+            )
+            db.session.add(notification)
+
             # Commit all changes
             db.session.commit()
 
@@ -1043,3 +1057,28 @@ def register_routes(app, db, bcrypt):
                 "status": "failed",
                 "message": f"An error occurred: {str(e)}"
             }), 500
+
+    @app.route('/notifications', methods=['GET'])
+    def get_recent_notifications():
+        try:
+            # Calculate the cutoff timestamp (48 hours ago)
+            cutoff_time = datetime.utcnow() - timedelta(hours=48)
+
+            # Query notifications created within the last 48 hours
+            recent_notifications = Notification.query.filter(Notification.date_created >= cutoff_time).order_by(Notification.date_created.desc()).all()
+
+            # Serialize notifications
+            result = [
+                {
+                    "notification_id": n.notification_id,
+                    "notification_type": n.notification_type,
+                    "message": n.message,
+                    "date_created": n.date_created.isoformat()
+                }
+                for n in recent_notifications
+            ]
+
+            return jsonify({"status": "success", "notifications": result}), 200
+
+        except Exception as e:
+            return jsonify({"status": "failed", "message": str(e)}), 500
