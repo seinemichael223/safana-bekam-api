@@ -363,28 +363,28 @@ def register_routes(app, db, bcrypt):
             # Create and commit the AcupuncturePoint records
             if acupuncture_points:
                 for point in acupuncture_points:
-                    # Unpack point details
+                    # Extract values from the dictionary
                     body_part = point.get('body_part')
                     coordinate_x = point.get('coordinate_x')
                     coordinate_y = point.get('coordinate_y')
                     skin_reaction = point.get('skin_reaction')
                     blood_quantity = point.get('blood_quantity')
 
-                    # Validate all required fields for acupuncture points
+                    # Validate that all required fields for an acupuncture point are present
                     if not all([body_part, coordinate_x, coordinate_y, skin_reaction, blood_quantity]):
                         return jsonify({'error': 'Each acupuncture point must include body_part, coordinate_x, coordinate_y, skin_reaction, and blood_quantity'}), 400
 
                     # Add acupuncture point record
                     acupuncture_point = AcupuncturePoint(
                         body_part=body_part,
-                        coordinate_x=coordinate_x,
-                        coordinate_y=coordinate_y,
-                        skin_reaction=skin_reaction,
-                        blood_quantity=blood_quantity,
+                        coordinate_x=coordinate_x,  # Ensure coordinate_x is a float
+                        coordinate_y=coordinate_y,  # Ensure coordinate_y is a float
+                        skin_reaction=skin_reaction,  # Ensure skin_reaction is an integer
+                        blood_quantity=blood_quantity,  # Ensure blood_quantity is an integer
                         record_id=patient_record.record_id
                     )
-                    db.session.add(acupuncture_point)
 
+                    db.session.add(acupuncture_point)
             # Commit all changes
             db.session.commit()
 
@@ -802,8 +802,8 @@ def register_routes(app, db, bcrypt):
         )
         point1 = AcupuncturePoint(
             body_part="Front",
-            coordinate_x=10.54,
-            coordinate_y=24.44,
+            coordinate_x="10.54",
+            coordinate_y="24.44",
             skin_reaction=2,
             blood_quantity=5,
             record_id=1  # Assuming this matches the patient record primary key
@@ -811,8 +811,8 @@ def register_routes(app, db, bcrypt):
 
         point2 = AcupuncturePoint(
             body_part="Back",
-            coordinate_x=10.12,
-            coordinate_y=29.31,
+            coordinate_x="10.12",
+            coordinate_y="29.31",
             skin_reaction=2,
             blood_quantity=5,
             record_id=1  # Assuming this matches the patient record primary key
@@ -820,8 +820,8 @@ def register_routes(app, db, bcrypt):
 
         point3 = AcupuncturePoint(
             body_part="Front",
-            coordinate_x=101.24,
-            coordinate_y=205.50,
+            coordinate_x="101.24",
+            coordinate_y="205.50",
             skin_reaction=2,
             blood_quantity=5,
             record_id=2  # Assuming this matches the patient record primary key

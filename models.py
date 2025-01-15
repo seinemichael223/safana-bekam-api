@@ -90,3 +90,15 @@ class AcupuncturePoint(db.Model):
 
     def get_id(self):
         return self.point_id
+
+class Notifications(db.Model):
+    __tablename__ = "notifications"  # Table for patient records
+
+    notif_id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.DateTime, nullable=False)
+    notif_type = db.Column(db.String(30), nullable=False)
+    message = db.Column(db.String(60), nullable=False)
+
+
+    def get_id(self):
+        return self.notif_id
