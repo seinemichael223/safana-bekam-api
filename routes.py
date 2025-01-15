@@ -317,16 +317,16 @@ def register_routes(app, db, bcrypt):
     @app.route('/submit-treatment', methods=['POST'])
     def submit_treatment():
         try:
-            
             if not session.get('user_id') or "therapists" not in session.get('role', []):
                 return jsonify({"status": "failed", "message": "Unauthorized access"}), 403
+
             # Parse data from the request
             data = request.get_json()
 
             # Extract treatment details
             patient_id = data.get('patient_id')
             therapist_id = data.get('therapist_id')
-            created_date = data.get('created_date')
+            created_date = data.get('created_date')  # Optional field
             frequency = data.get('frequency')
             blood_pressure_before = data.get('blood_pressure_before')
             blood_pressure_after = data.get('blood_pressure_after')
@@ -336,8 +336,14 @@ def register_routes(app, db, bcrypt):
             acupuncture_points = data.get('acupuncture_point')
 
             # Validate required fields
-            if not all([patient_id, therapist_id, created_date, frequency, blood_pressure_before, blood_pressure_after, package]):
-                return jsonify({'error': 'Missing required fields'}), 400
+            required_fields = ['patient_id', 'therapist_id', 'frequency', 'blood_pressure_before', 'blood_pressure_after', 'package']
+            missing_fields = [field for field in required_fields if not data.get(field)]
+            if missing_fields:
+                return jsonify({'error': f"Missing required fields: {', '.join(missing_fields)}"}), 400
+
+            # Generate created_date if not provided
+            if not created_date:
+                created_date = datetime.now().strftime('%Y-%m-%d')
 
             # Create and commit the PatientRecord
             patient_record = PatientRecord(
@@ -357,7 +363,18 @@ def register_routes(app, db, bcrypt):
             # Create and commit the AcupuncturePoint records
             if acupuncture_points:
                 for point in acupuncture_points:
-                    body_part, coordinate_x, coordinate_y, skin_reaction, blood_quantity = point
+                    # Unpack point details
+                    body_part = point.get('body_part')
+                    coordinate_x = point.get('coordinate_x')
+                    coordinate_y = point.get('coordinate_y')
+                    skin_reaction = point.get('skin_reaction')
+                    blood_quantity = point.get('blood_quantity')
+
+                    # Validate all required fields for acupuncture points
+                    if not all([body_part, coordinate_x, coordinate_y, skin_reaction, blood_quantity]):
+                        return jsonify({'error': 'Each acupuncture point must include body_part, coordinate_x, coordinate_y, skin_reaction, and blood_quantity'}), 400
+
+                    # Add acupuncture point record
                     acupuncture_point = AcupuncturePoint(
                         body_part=body_part,
                         coordinate_x=coordinate_x,
