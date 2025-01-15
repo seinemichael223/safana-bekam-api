@@ -81,8 +81,8 @@ class AcupuncturePoint(db.Model):
 
     point_id = db.Column(db.Integer, primary_key=True)
     body_part = db.Column(db.String(20), nullable=False)
-    coordinate_x = db.Column(db.Float, nullable=False)
-    coordinate_y = db.Column(db.Float, nullable=False)
+    coordinate_x = db.Column(db.String(40), nullable=False)
+    coordinate_y = db.Column(db.String(40), nullable=False)
     skin_reaction = db.Column(db.Integer, nullable=False)
     blood_quantity = db.Column(db.Integer, nullable=False)
 
