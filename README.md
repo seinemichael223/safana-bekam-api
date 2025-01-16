@@ -26,6 +26,7 @@ expected FormData:
 
 "/update-patient" = Updates an existing patient's information
 expected JSON Payload:
+```json
 {
     "patient_id": 1,
     "name": "Updated Name",
@@ -44,6 +45,7 @@ expected JSON Payload:
         {"condition": "Diabetes", "medicine": "Metformin"}
     ]
 }
+```
 
 "/update-treatment-record" = Updates a specific record's information
 expected JSON Payload:
@@ -71,3 +73,5 @@ Expected Formdata:
 "/total-patients" = Returns the number of total patients in the database
 "/treatment-records-daily" = Returns the number of treatment records created in the last 24 hours
 "/insert-data" = Insert Dummy Data
+"/check-patients-monthly-sorted" = Returns the number of patients registered and treatment records added in a month for a specified year
+"/notifications" = Returns the notifications of events that occurred in the past 48 hours

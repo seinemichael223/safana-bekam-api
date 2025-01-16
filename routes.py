@@ -1093,30 +1093,48 @@ def register_routes(app, db, bcrypt):
                 return jsonify({"error": "Year is required"}), 400
 
             # Query to count patients by month for the specified year
-            monthly_counts = db.session.query(
-                extract('month', Patient.date).label('month'),  # Extract the month
-                db.func.count(Patient.pid).label('count')  # Count the patients
+            patient_monthly_counts = db.session.query(
+                extract('month', Patient.date).label('month'),
+                db.func.count(Patient.pid).label('new_patients_registered')
             ).filter(
-                extract('year', Patient.date) == year  # Filter by year
+                extract('year', Patient.date) == year
             ).group_by(
-                extract('month', Patient.date)  # Group by month
+                extract('month', Patient.date)
             ).order_by(
-                extract('month', Patient.date)  # Order by month
+                extract('month', Patient.date)
             ).all()
 
-            # Map the results to a dictionary with month names
+            # Query to count treatment records by month for the specified year
+            treatment_monthly_counts = db.session.query(
+                extract('month', PatientRecord.date).label('month'),
+                db.func.count(PatientRecord.record_id).label('new_treatment_records')
+            ).filter(
+                extract('year', PatientRecord.date) == year
+            ).group_by(
+                extract('month', PatientRecord.date)
+            ).order_by(
+                extract('month', PatientRecord.date)
+            ).all()
+
+            # Combine the results into a single response
             month_names = [
-                "January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
             ]
-            result = {month_names[month - 1]: count for month, count in monthly_counts}
+            result = {month: {"new_patients_registered": 0, "new_treatment_records": 0} for month in month_names}
 
-            # Fill in months with zero registrations
-            for i, name in enumerate(month_names, 1):
-                if name not in result:
-                    result[name] = 0
+            # Map patient data to the result
+            for month, count in patient_monthly_counts:
+                result[month_names[month - 1]]["new_patients_registered"] = count
 
-            return jsonify(result), 200
+            # Map treatment data to the result
+            for month, count in treatment_monthly_counts:
+                result[month_names[month - 1]]["new_treatment_records"] = count
+
+            # Format the result for JSON response
+            formatted_result = [{"month": month, **data} for month, data in result.items()]
+
+            return jsonify({"status": "data", "data": formatted_result}), 200
 
         except Exception as e:
             return jsonify({"error": f"An error occurred: {str(e)}"}), 500
