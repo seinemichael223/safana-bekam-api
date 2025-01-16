@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, url_for, jsonify, Response
 from flask_login import login_user, logout_user, current_user, login_required
 import json, os
 from datetime import datetime, timedelta
+from sqlalchemy import extract
 
 from models import User, Patient, PatientRecord, AcupuncturePoint, MedicalHistory, Notifications
 def get_domain_url():
@@ -1082,3 +1083,40 @@ def register_routes(app, db, bcrypt):
 
         except Exception as e:
             return jsonify({"status": "failed", "message": str(e)}), 500
+
+    @app.route('/check-patients-monthly-sorted', methods=['GET'])
+    def check_patients_monthly_sorted():
+        try:
+            # Extract the year from the query parameters
+            year = request.args.get('year', type=int)
+            if not year:
+                return jsonify({"error": "Year is required"}), 400
+
+            # Query to count patients by month for the specified year
+            monthly_counts = db.session.query(
+                extract('month', Patient.date).label('month'),  # Extract the month
+                db.func.count(Patient.pid).label('count')  # Count the patients
+            ).filter(
+                extract('year', Patient.date) == year  # Filter by year
+            ).group_by(
+                extract('month', Patient.date)  # Group by month
+            ).order_by(
+                extract('month', Patient.date)  # Order by month
+            ).all()
+
+            # Map the results to a dictionary with month names
+            month_names = [
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            ]
+            result = {month_names[month - 1]: count for month, count in monthly_counts}
+
+            # Fill in months with zero registrations
+            for i, name in enumerate(month_names, 1):
+                if name not in result:
+                    result[name] = 0
+
+            return jsonify(result), 200
+
+        except Exception as e:
+            return jsonify({"error": f"An error occurred: {str(e)}"}), 500
