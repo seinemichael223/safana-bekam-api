@@ -1,5 +1,6 @@
 # safana-bekam-api
-Safana Bekam API 
+
+Safana Bekam API
 
 routes.py:
 
@@ -49,6 +50,7 @@ expected JSON Payload:
 
 "/update-treatment-record" = Updates a specific record's information
 expected JSON Payload:
+```json
 {
     "record_id": 1,
     "created_date": "2025-01-11",
@@ -63,6 +65,7 @@ expected JSON Payload:
         {"body_part": "Leg", "coordinate_x": 3.0, "coordinate_y": 4.0, "skin_reaction": 2, "blood_quantity": 3}
     ]
 }
+```
 
 "/update-user" = Update User's information
 Expected Formdata:

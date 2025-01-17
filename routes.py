@@ -217,6 +217,17 @@ def register_routes(app, db, bcrypt):
                 patient.medical_histories.extend(medical_history_list)
 
                 db.session.add(patient)
+                db.session.flush()  # Flush to generate patient ID before using it in notification
+
+                # Insert a notification for the new patient
+                notification = Notifications(
+                    date=datetime.strptime(created_date, '%Y-%m-%d'),
+                    notif_type="patient submission",
+                    message=f"New Patient, {name} added on {created_date}",
+                )
+                db.session.add(notification)
+
+                # Commit the transaction
                 db.session.commit()
 
                 return jsonify({"status": "success", "message": "Patient registered successfully"}), 201
