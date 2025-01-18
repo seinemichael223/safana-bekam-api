@@ -222,7 +222,7 @@ def register_routes(app, db, bcrypt):
                 # Insert a notification for the new patient
                 notification = Notifications(
                     date=datetime.strptime(created_date, '%Y-%m-%d'),
-                    notif_type="patient submission",
+                    notif_type="tambah pelanggan",
                     message=f"New Patient, {name} added on {created_date}",
                 )
                 db.session.add(notification)
@@ -406,7 +406,7 @@ def register_routes(app, db, bcrypt):
             notification_message = f"New Treatment added for {patient.name} on {created_date}"
             notification = Notifications(
                 date=datetime.strptime(created_date, '%Y-%m-%d'),
-                notif_type="treatment submission",
+                notif_type="rekod rawatan baharu",
                 message=notification_message
             )
             db.session.add(notification)
@@ -1077,15 +1077,15 @@ def register_routes(app, db, bcrypt):
             cutoff_time = datetime.utcnow() - timedelta(hours=48)
 
             # Query notifications created within the last 48 hours
-            recent_notifications = Notification.query.filter(Notification.date_created >= cutoff_time).order_by(Notification.date_created.desc()).all()
+            recent_notifications = Notifications.query.filter(Notifications.date >= cutoff_time).order_by(Notifications.date.desc()).all()
 
             # Serialize notifications
             result = [
                 {
-                    "notification_id": n.notification_id,
-                    "notification_type": n.notification_type,
+                    "notification_id": n.notif_id,
+                    "notification_type": n.notif_type,
                     "message": n.message,
-                    "date_created": n.date_created.isoformat()
+                    "date_created": n.date.isoformat()
                 }
                 for n in recent_notifications
             ]
@@ -1145,7 +1145,7 @@ def register_routes(app, db, bcrypt):
             # Format the result for JSON response
             formatted_result = [{"month": month, **data} for month, data in result.items()]
 
-            return jsonify({"status": "data", "data": formatted_result}), 200
+            return jsonify({"status": "success", "data": formatted_result}), 200
 
         except Exception as e:
             return jsonify({"error": f"An error occurred: {str(e)}"}), 500
