@@ -158,7 +158,6 @@ def register_routes(app, db, bcrypt):
         if request.method == "GET":
             return render_template("register_patient.html")
         elif request.method == "POST":
-
             try:
                 # Parse JSON data from the request
                 data = request.get_json()
@@ -191,12 +190,12 @@ def register_routes(app, db, bcrypt):
                 medical_history_list = []
                 for history in medical_history:
                     condition = history.get("condition")
-                    medicine = history.get("medicine")
+                    medicine = history.get("medicine", "")  # Default to an empty string if not provided
 
-                    if not all([condition, medicine]):
-                        return jsonify({"status": "failed", "message": "Each medical history entry must include 'condition' and 'medicine'"}), 400
+                    if not condition:  # Condition is mandatory
+                        return jsonify({"status": "failed", "message": "Each medical history entry must include 'condition'"}), 400
 
-                    medical_history_list.append(MedicalHistory(condition=condition, medicine=medicine))
+                    medical_history_list.append(MedicalHistory(condition=condition, medicine=medicine or ""))
 
                 # Create and save the patient
                 patient = Patient(

@@ -24,7 +24,7 @@ class Patient(db.Model):
     pid = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=False, nullable=False)
     mykad = db.Column(db.String(50), unique=True, nullable=False)
-    gender = db.Column(db.String(250), nullable=False)
+    gender = db.Column(db.String(20), nullable=False)
     ethnicity = db.Column(db.String(40), nullable=False)
     p_mobile_no = db.Column(db.String(14), nullable=False)
     p_email = db.Column(db.String(150), nullable=False)
@@ -46,7 +46,7 @@ class MedicalHistory(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     condition = db.Column(db.String(100), nullable=False)
-    medicine = db.Column(db.String(100), nullable=False)
+    medicine = db.Column(db.String(800), nullable=True)
 
     # Foreign key to link with the Patient
     patient_id = db.Column(db.Integer, db.ForeignKey('patients.pid'), nullable=False)
@@ -64,7 +64,7 @@ class PatientRecord(db.Model):
     blood_pressure_after = db.Column(db.String(10), nullable=False)
     package = db.Column(db.String(80), nullable=False)
     health_complications = db.Column(db.String(200), nullable=False)
-    comments = db.Column(db.String(500), nullable=False)
+    comments = db.Column(db.String(800), nullable=False)
 
     patient_id = db.Column(db.Integer, db.ForeignKey('patients.pid'), nullable=False)
     therapist_id = db.Column(db.Integer, db.ForeignKey('users.uid'), nullable=False)
