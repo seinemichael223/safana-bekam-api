@@ -35,5 +35,5 @@ services:
       - mariadb
     environment:
       PMA_HOST: mariadb
-      PMA_USER: virtuosa
-      PMA_PASSWORD: cello
+      # PMA_USER: virtuosa
+      # PMA_PASSWORD: cello

@@ -689,8 +689,12 @@ def register_routes(app, db, bcrypt):
             patient.date = datetime.now()
 
             # Update medical history
-            updated_medical_history = data.get("medical_history", [])
-            if updated_medical_history:
+            updated_medical_history = data.get("medical_history", None)  # Explicitly handle None
+
+            if updated_medical_history is None:
+                # If no medical history is provided, delete all existing records
+                MedicalHistory.query.filter_by(patient_id=patient_id).delete()
+            else:
                 # Convert the updated medical history to a dictionary for easy lookup
                 updated_history_dict = {entry["condition"]: entry["medicine"] for entry in updated_medical_history}
 

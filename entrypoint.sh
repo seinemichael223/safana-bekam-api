@@ -1,12 +1,12 @@
 #!/bin/bash
 
-sleep 10
+sleep 6
 
 # Run database migrations
 flask db init || true  # Skip if already initialized
-sleep 6
+sleep 1
 flask db migrate
-sleep 6
+sleep 1
 flask db upgrade
 
 # Start the Flask application
